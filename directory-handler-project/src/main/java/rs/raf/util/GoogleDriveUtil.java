@@ -7,7 +7,8 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
-import rs.raf.drive.DirectoryHandlerGoogleDriveImplementation;
+import rs.raf.googleDriveImplementation.DirectoryHandlerGoogleDriveImplementation;
+
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;

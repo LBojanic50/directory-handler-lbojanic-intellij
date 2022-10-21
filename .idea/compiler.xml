@@ -7,6 +7,8 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="directory-handler-specification" />
+        <module name="directory-handler-google-drive-implementation" />
+        <module name="directory-handler-project" />
         <module name="directory-handler-local-implementation" />
       </profile>
     </annotationProcessing>

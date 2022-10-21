@@ -13,12 +13,12 @@ public interface DirectoryHandlerLocalSpecification {
 	/**
      * Creates a local repository with the default name;
      */
-	void createLocalRepository();
+	void createLocalRepository() throws IOException;
 	/**
      * Creates a local repository with the specified name;
      * @param repositoryName name of the repository to create
      */
-	void createLocalRepository(String repositoryName);
+	void createLocalRepository(final String repositoryName) throws IOException;
     /**
      * Creates a local directory with the default name;
      */
@@ -27,7 +27,7 @@ public interface DirectoryHandlerLocalSpecification {
      * Creates a local directory with the specified name;
      * @param directoryName name of directory to create
      */
-    void createLocalDirectory(String directoryName);
+    void createLocalDirectory(final String directoryName);
     /**
      * Creates a local file with the default name;
      * @param directoryName name of directory to create the file in
@@ -40,11 +40,11 @@ public interface DirectoryHandlerLocalSpecification {
      * @param fileName name of file to create
      * @param fileExtension file extension
      */
-    void createLocalFile(String directoryName, String fileName, String fileExtension);
+    void createLocalFile(final String directoryName, final String fileName, final String fileExtension);
     
     long getFolderSize() throws FileNotFoundException, IOException;
 	Properties getProperties() throws IOException;
-	void createDefaultConfig() throws IOException;
-	void createConfig(String maxRepositorySize, int maxFileCount, String[] excludedExtensions) throws IOException;
-	String arrayToString(String[] array);
+	void createDefaultConfig(final String directoryName) throws IOException;
+	void createConfig(final String directoryName, final String maxRepositorySize, final int maxFileCount, final String[] excludedExtensions) throws IOException;
+	String arrayToString(final String[] array);
 }
