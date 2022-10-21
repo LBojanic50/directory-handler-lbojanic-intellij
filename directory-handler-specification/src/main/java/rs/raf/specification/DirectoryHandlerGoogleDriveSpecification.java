@@ -5,6 +5,7 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.services.drive.Drive;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -60,6 +61,6 @@ public interface DirectoryHandlerGoogleDriveSpecification {
      * @param fileExtension file extension
      */   
     String createGoogleDriveFile(final Drive googleDriveClient, final String directoryName, final String fileName, final String fileExtension) throws IOException;
-    List<String> getFileList(final Drive googleDriveClient) throws IOException;
+    List<String> getFileList(final Drive googleDriveClient, final String directoryName) throws IOException;
     String getDirectoryIdByName(final Drive googleDriveClient, final String directoryName) throws IOException;
 }

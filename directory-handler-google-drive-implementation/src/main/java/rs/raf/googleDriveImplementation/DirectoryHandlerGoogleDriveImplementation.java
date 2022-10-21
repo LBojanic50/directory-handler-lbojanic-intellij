@@ -6,7 +6,6 @@ import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.http.FileContent;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
@@ -125,10 +124,13 @@ public class DirectoryHandlerGoogleDriveImplementation implements DirectoryHandl
     }
 
     @Override
-    public List<String> getFileList(Drive googleDriveClient) throws IOException {
+    public List<String> getFileList(final Drive googleDriveClient, final String directoryName) throws IOException {
         List<String> fileList = new ArrayList<>();
-        FileList result = googleDriveClient.files().list().setPageSize(10).setFields("nextPageToken, files(id, name)").execute();
-        List<File> files = result.getFiles();
+        FileList resultSpecific = googleDriveClient.files().list()
+                .setQ(String.format("'%s' in parents and trashed = false", getDirectoryIdByName(googleDriveClient, directoryName)))
+                .setFields("nextPageToken, files(id, name, parents)").execute();
+        //FileList result = googleDriveClient.files().list().setPageSize(10).setFields("nextPageToken, files(id, name)").execute();
+        List<File> files = resultSpecific.getFiles();
         if (files == null || files.isEmpty()) {
             System.out.println("No files found.");
         }
@@ -141,7 +143,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements DirectoryHandl
     }
 
     @Override
-    public String getDirectoryIdByName(Drive googleDriveClient, String directoryName) throws IOException {
+    public String getDirectoryIdByName(final Drive googleDriveClient, final String directoryName) throws IOException {
         FileList result = googleDriveClient.files().list().setQ("mimeType='application/vnd.google-apps.folder' and trashed=false").setFields("nextPageToken, files(id, name)").setSpaces("drive").execute();
         List<File> files = result.getFiles();
         if (files == null || files.isEmpty()) {

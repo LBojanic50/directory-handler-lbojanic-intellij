@@ -1,10 +1,10 @@
 package rs.raf.main;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-
 import rs.raf.util.GoogleDriveUtil;
 import rs.raf.util.LocalUtil;
+
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 
 public class Main {
 	public static void main(String[] args) throws GeneralSecurityException, IOException {

@@ -1,16 +1,12 @@
 package rs.raf.localImplementation;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.nio.file.Files;
+import org.apache.commons.io.FileUtils;
+import rs.raf.specification.DirectoryHandlerLocalSpecification;
+
+import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
-import org.apache.commons.io.FileUtils;
-import rs.raf.specification.DirectoryHandlerLocalSpecification;
 
 public class DirectoryHandlerLocalImplementation implements DirectoryHandlerLocalSpecification {
 	private static String workingDirectory = System.getProperty("user.dir") + "\\directory-handler-project";

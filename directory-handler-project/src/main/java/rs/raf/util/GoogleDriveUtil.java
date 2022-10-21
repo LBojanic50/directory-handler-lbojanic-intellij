@@ -7,9 +7,6 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
-import com.google.api.services.drive.model.File;
-import com.google.api.services.drive.model.FileList;
-import org.apache.commons.io.IOUtils;
 import rs.raf.googleDriveImplementation.DirectoryHandlerGoogleDriveImplementation;
 
 import java.io.FileInputStream;
@@ -18,7 +15,6 @@ import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Properties;
 
 public class GoogleDriveUtil {
     private static final String APPLICATION_NAME = "directory-handler-lbojanic";
@@ -46,7 +42,8 @@ public class GoogleDriveUtil {
     }
     public void startApp() throws IOException {
         directoryHandlerGoogleDriveImplementation.createGoogleDriveFile(googleDriveClient, "testDir", "testFile", "txt");
-        directoryHandlerGoogleDriveImplementation.getFileList(googleDriveClient);
+        List<String> fileList = directoryHandlerGoogleDriveImplementation.getFileList(googleDriveClient, "testDir");
+        System.out.println(fileList);
     	//System.out.println(directoryHandlerGoogleDriveImplementation.createGoogleDriveFile(googleDriveClient, "test", "testFile", "txt"));
     }
 }
