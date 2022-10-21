@@ -4,12 +4,14 @@ import org.apache.commons.io.FileUtils;
 import rs.raf.specification.DirectoryHandlerLocalSpecification;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 
 public class DirectoryHandlerLocalImplementation implements DirectoryHandlerLocalSpecification {
 	private static String workingDirectory = System.getProperty("user.dir") + "\\directory-handler-project";
+	//private static String workingDirectory = "D:\\JavaProjects\\directory-handler-lbojanic-intellij\\directory-handler-project";
 
 	@Override
 	public void createLocalDirectory() {
@@ -29,7 +31,7 @@ public class DirectoryHandlerLocalImplementation implements DirectoryHandlerLoca
 	}
 
 	@Override
-	public void createLocalDirectory(String directoryName) {
+	public void createLocalDirectory(final String directoryName) {
 		File file = new File(String.format(workingDirectory + "\\src\\%s", directoryName));
 		try {
 			if (file.mkdir()) {
@@ -45,7 +47,7 @@ public class DirectoryHandlerLocalImplementation implements DirectoryHandlerLoca
 	}
 
 	@Override
-	public void createLocalFile(String directoryName, String fileExtension) {
+	public void createLocalFile(final String directoryName, final String fileExtension) {
 		File file = new File(String.format(workingDirectory + "\\src\\directoryName\\defaultFile.%s", fileExtension));
 		try {
 			if (file.createNewFile()) {
@@ -61,9 +63,8 @@ public class DirectoryHandlerLocalImplementation implements DirectoryHandlerLoca
 	}
 
 	@Override
-	public void createLocalFile(String directoryName, String fileName, String fileExtension) {
-		File file = new File(
-				String.format(workingDirectory + "\\src\\%s\\%s.%s", directoryName, fileName, fileExtension));
+	public void createLocalFile(final String directoryName, final String fileName, final String fileExtension) {
+		File file = new File(String.format(workingDirectory + "\\src\\%s\\%s.%s", directoryName, fileName, fileExtension));
 		try {
 			if (file.createNewFile()) {
 				System.out.println("File Created");
@@ -85,41 +86,57 @@ public class DirectoryHandlerLocalImplementation implements DirectoryHandlerLoca
 	}
 
 	@Override
-	public void createLocalRepository(String repositoryName) throws IOException {
+	public void createLocalRepository(final String repositoryName) throws IOException {
 		File file = new File(String.format(workingDirectory + "\\src\\%s", repositoryName));
 		file.mkdir();
 		createDefaultConfig(repositoryName);
 	}
 
 	@Override
-	public void createLocalRepository(String repositoryName, String maxRepositorySize, int maxFileCount, String[] excludedExtensions) throws IOException {
+	public void createLocalRepository(final String repositoryName, final String maxRepositorySize, final int maxFileCount, String[] excludedExtensions) throws IOException {
 		File file = new File(String.format(workingDirectory + "\\src\\%s", repositoryName));
 		file.mkdir();
 		createConfig(repositoryName, maxRepositorySize, maxFileCount, excludedExtensions);
 	}
 
 	@Override
-	public long getFolderSize() throws IOException {
-		Path path = Paths.get(workingDirectory + "\\src\\defaultRepository");
+	public long getFolderSize(final String directoryName) throws IOException {
+		Path path = Paths.get(String.format(workingDirectory + "\\src\\%s", directoryName));
 		File file = path.toFile();
-		/*
-		 * BufferedReader bufferedReader = new BufferedReader(new FileReader(file));
-		 * System.out.println(bufferedReader.readLine());
-		 */
 		return FileUtils.sizeOfDirectory(file);
 	}
 
 	@Override
-	public Properties getProperties() throws IOException {
+	public long getFileSize(final String directoryName, final String fileName) throws FileNotFoundException, IOException {
+		Path path = Paths.get(String.format(workingDirectory + "\\src\\%s\\%s", directoryName, fileName));
+		File file = path.toFile();
+		return FileUtils.sizeOf(file);
+	}
+
+	@Override
+	public void renameFile(final String directoryName, final String fileName, final String newName) throws IOException {
+		Path path = Paths.get(String.format(workingDirectory + "\\src\\%s\\%s", directoryName, fileName));
+		Files.move(path, path.resolveSibling(newName));
+	}
+
+	@Override
+	public Properties getProperties(final String directoryName) throws IOException {
 		Properties properties = new Properties();
-		FileInputStream fileInputStream = new FileInputStream(workingDirectory + "\\src\\main\\resources\\config.properties");
+		FileInputStream fileInputStream = new FileInputStream(String.format(workingDirectory + "\\src\\%s\\config.properties", directoryName));
 		InputStream inputStream = fileInputStream;
 		properties.load(inputStream);
 		return properties;
 	}
 
 	@Override
-	public void createDefaultConfig(String directoryName) throws IOException {
+	public void deleteFile(String directoryName, String fileName) throws IOException {
+		Path path = Paths.get(String.format(workingDirectory + "\\src\\%s\\%s", directoryName, fileName));
+		File file = path.toFile();
+		file.delete();
+	}
+
+	@Override
+	public void createDefaultConfig(final String directoryName) throws IOException {
 		File file = new File(String.format(workingDirectory + "\\src\\%s\\config.properties", directoryName));
 		PrintWriter writer = new PrintWriter(file, "UTF-8");
 		writer.println("maxRepositorySize = 1073741824");
@@ -129,7 +146,7 @@ public class DirectoryHandlerLocalImplementation implements DirectoryHandlerLoca
 	}
 
 	@Override
-	public void createConfig(String directoryName, String maxRepositorySize, int maxFileCount, String[] excludedExtensions)throws IOException {
+	public void createConfig(final String directoryName, final String maxRepositorySize, final int maxFileCount, final String[] excludedExtensions)throws IOException {
 		File file = new File(String.format(workingDirectory + "\\src\\%s\\config.properties", directoryName));
 		PrintWriter writer = new PrintWriter(file, "UTF-8");
 		writer.println(String.format("maxRepositorySize = %s", maxRepositorySize));
@@ -138,11 +155,18 @@ public class DirectoryHandlerLocalImplementation implements DirectoryHandlerLoca
 		writer.close();
 	}
 	@Override
-	public String arrayToString(String[] array) {
+	public String arrayToString(final String[] array) {
 		String arrayString = "";
 		for (int i = 0; i < array.length; i++) {
 			arrayString += array[i] + ",";
 		}
 		return arrayString.substring(0, arrayString.length() - 1);
+	}
+
+	@Override
+	public void writeToFile(final String directoryName, final String fileName, final String textToWrite) throws IOException {
+		Path path = Paths.get(String.format(workingDirectory + "\\src\\%s\\%s", directoryName, fileName));
+		File file = path.toFile();
+		FileUtils.writeStringToFile(file, textToWrite, "UTF-8");
 	}
 }

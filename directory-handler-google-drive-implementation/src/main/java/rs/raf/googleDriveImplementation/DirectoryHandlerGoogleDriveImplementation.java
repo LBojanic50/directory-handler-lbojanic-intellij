@@ -14,10 +14,7 @@ import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
 import rs.raf.specification.DirectoryHandlerGoogleDriveSpecification;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -110,11 +107,14 @@ public class DirectoryHandlerGoogleDriveImplementation implements DirectoryHandl
     @Override
     public String createGoogleDriveFile(final Drive googleDriveClient, final String directoryName, final String fileName, final String fileExtension) throws IOException {
         File fileMetadata = new File();
-        fileMetadata.setName(String.format("testFile.%s", fileExtension));
+        fileMetadata.setName(String.format("%s.%s", fileName, fileExtension));
         fileMetadata.setParents(Collections.singletonList(getDirectoryIdByName(googleDriveClient, directoryName)));
+        //System.out.println(fileMetadata.size());
         try {
-            File file = googleDriveClient.files().create(fileMetadata).setFields("id, parents").execute();
-            System.out.println("File ID: " + file.getId());
+            Drive.Files.Create fileCreate = googleDriveClient.files().create(fileMetadata).setFields("id, name, size, parents");
+            System.out.println(fileCreate.size());
+            File file = fileCreate.execute();
+            System.out.println("File ID: " + file.getId() + "Size: " + file.size());
             return file.getId();
         }
         catch (GoogleJsonResponseException e) {

@@ -14,5 +14,9 @@ public class LocalUtil {
 	}
 	public void startApp() throws IOException {
 		directoryHandlerLocalImplementation.createLocalRepository("myRep", "10000B", 30, new String[] {"exe"});
+		directoryHandlerLocalImplementation.createLocalFile("myRep", "testFile", "txt");
+		directoryHandlerLocalImplementation.writeToFile("myRep", "testFile.txt", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+		System.out.println(directoryHandlerLocalImplementation.getFileSize("myRep", "testFile.txt"));
+		//directoryHandlerLocalImplementation.renameFile("myRep", "testFile.txt", "newName");
 	}
 }

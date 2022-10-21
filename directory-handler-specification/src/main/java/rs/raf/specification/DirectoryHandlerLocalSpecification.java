@@ -1,5 +1,6 @@
 package rs.raf.specification;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
@@ -45,9 +46,13 @@ public interface DirectoryHandlerLocalSpecification {
      */
     void createLocalFile(final String directoryName, final String fileName, final String fileExtension);
     
-    long getFolderSize() throws FileNotFoundException, IOException;
-	Properties getProperties() throws IOException;
+    long getFolderSize(final String directoryName) throws FileNotFoundException, IOException;
+    long getFileSize(final String directoryName, final String fileName) throws FileNotFoundException, IOException;
+	Properties getProperties(final String directoryName) throws IOException;
 	void createDefaultConfig(final String directoryName) throws IOException;
 	void createConfig(final String directoryName, final String maxRepositorySize, final int maxFileCount, final String[] excludedExtensions) throws IOException;
 	String arrayToString(final String[] array);
+    void writeToFile(final String directoryName, final String fileName, final String textToWrite) throws IOException;
+    void deleteFile(final String directoryName, final String fileName) throws IOException;
+    void renameFile(final String directoryName, final String fileName, final String newName) throws IOException;
 }
