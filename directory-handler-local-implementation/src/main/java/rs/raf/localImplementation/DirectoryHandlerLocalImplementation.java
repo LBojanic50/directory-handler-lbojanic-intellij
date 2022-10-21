@@ -85,15 +85,21 @@ public class DirectoryHandlerLocalImplementation implements DirectoryHandlerLoca
 	public void createLocalRepository() throws IOException {
 		File file = new File(workingDirectory + "\\src\\defaultRepository");
 		file.mkdir();
-		System.out.println(file);
 		createDefaultConfig("defaultRepository");
 	}
 
 	@Override
 	public void createLocalRepository(String repositoryName) throws IOException {
-		Path dir = Paths.get(String.format(workingDirectory + "\\src\\%s", repositoryName));
-		Files.createDirectory(dir);
+		File file = new File(String.format(workingDirectory + "\\src\\%s", repositoryName));
+		file.mkdir();
 		createDefaultConfig(repositoryName);
+	}
+
+	@Override
+	public void createLocalRepository(String repositoryName, String maxRepositorySize, int maxFileCount, String[] excludedExtensions) throws IOException {
+		File file = new File(String.format(workingDirectory + "\\src\\%s", repositoryName));
+		file.mkdir();
+		createConfig(repositoryName, maxRepositorySize, maxFileCount, excludedExtensions);
 	}
 
 	@Override

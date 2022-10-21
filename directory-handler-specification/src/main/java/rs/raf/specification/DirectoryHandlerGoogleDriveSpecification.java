@@ -42,9 +42,9 @@ public interface DirectoryHandlerGoogleDriveSpecification {
     /**
      * Creates a Google Drive text file with the default name in the specified directory;
      * @param googleDriveClient Google Drive authenticated client with scopes;
-     * @param directoryName name of directory to create the file in
+     * @param directoryId name of directory to create the file in
      */
-    String createGoogleDriveFile(final Drive googleDriveClient, final String directoryName) throws IOException; 
+    String createGoogleDriveFile(final Drive googleDriveClient, final String directoryId) throws IOException;
     /**
      * Creates a Google Drive text file with the default name in the root directory;
      * @param googleDriveClient Google Drive authenticated client with scopes;
@@ -60,4 +60,6 @@ public interface DirectoryHandlerGoogleDriveSpecification {
      * @param fileExtension file extension
      */   
     String createGoogleDriveFile(final Drive googleDriveClient, final String directoryName, final String fileName, final String fileExtension) throws IOException;
+    List<String> getFileList(final Drive googleDriveClient) throws IOException;
+    String getDirectoryIdByName(final Drive googleDriveClient, final String directoryName) throws IOException;
 }

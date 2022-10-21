@@ -12,6 +12,6 @@ public class LocalUtil {
 		directoryHandlerLocalImplementation = new DirectoryHandlerLocalImplementation();		
 	}
 	public void startApp() throws IOException {
-		directoryHandlerLocalImplementation.createLocalRepository();
+		directoryHandlerLocalImplementation.createLocalRepository("myRep", "10000B", 30, new String[] {"exe"});
 	}
 }

@@ -11,14 +11,22 @@ import org.apache.commons.io.FileUtils;
 
 public interface DirectoryHandlerLocalSpecification {
 	/**
-     * Creates a local repository with the default name;
+     * Creates a local repository with the default name and config;
      */
 	void createLocalRepository() throws IOException;
 	/**
-     * Creates a local repository with the specified name;
+     * Creates a local repository with the specified name and default config;
      * @param repositoryName name of the repository to create
      */
 	void createLocalRepository(final String repositoryName) throws IOException;
+    /**
+     * Creates a local repository with the specified name and default config;
+     * @param repositoryName name of the repository to create
+     * @param maxRepositorySize max repository size (stored in config file, 1GB by default)
+     * @param maxFileCount max file count in repository (stored in config file, 20 by default)
+     * @param excludedExtensions string array of extensions that can't be stored in repository (stored in config file, "none" by default)
+     */
+    void createLocalRepository(final String repositoryName, String maxRepositorySize, int maxFileCount, String[] excludedExtensions) throws IOException;
     /**
      * Creates a local directory with the default name;
      */
@@ -33,7 +41,7 @@ public interface DirectoryHandlerLocalSpecification {
      * @param directoryName name of directory to create the file in
      * @param fileExtension file extension
      */
-    void createLocalFile(String directoryName, String fileExtension);
+    void createLocalFile(final String directoryName, final String fileExtension);
     /**
      * Creates a local directory with the specified name;
      * @param directoryName name of directory to create the file in
