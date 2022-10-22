@@ -41,9 +41,7 @@ public class GoogleDriveUtil {
         googleDriveClient = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, credentials).setApplicationName(APPLICATION_NAME).build();
     }
     public void startApp() throws IOException {
-        directoryHandlerGoogleDriveImplementation.createGoogleDriveFile(googleDriveClient, "testDir", "testFile", "txt");
-        List<String> fileList = directoryHandlerGoogleDriveImplementation.getFileList(googleDriveClient, "testDir");
-        System.out.println(fileList);
-    	//System.out.println(directoryHandlerGoogleDriveImplementation.createGoogleDriveFile(googleDriveClient, "test", "testFile", "txt"));
+        directoryHandlerGoogleDriveImplementation.createGoogleDriveDirectory(googleDriveClient, "customDir");
+    	directoryHandlerGoogleDriveImplementation.createGoogleDriveFile(googleDriveClient, "customDir", "customFile", "txt");
     }
 }

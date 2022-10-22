@@ -109,12 +109,9 @@ public class DirectoryHandlerGoogleDriveImplementation implements DirectoryHandl
         File fileMetadata = new File();
         fileMetadata.setName(String.format("%s.%s", fileName, fileExtension));
         fileMetadata.setParents(Collections.singletonList(getDirectoryIdByName(googleDriveClient, directoryName)));
-        //System.out.println(fileMetadata.size());
         try {
-            Drive.Files.Create fileCreate = googleDriveClient.files().create(fileMetadata).setFields("id, name, size, parents");
-            System.out.println(fileCreate.size());
-            File file = fileCreate.execute();
-            System.out.println("File ID: " + file.getId() + "Size: " + file.size());
+            File file = googleDriveClient.files().create(fileMetadata).setFields("id, name, size, parents").execute();
+            System.out.println("File ID: " + file.getId());
             return file.getId();
         }
         catch (GoogleJsonResponseException e) {

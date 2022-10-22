@@ -3,9 +3,11 @@ package rs.raf.specification;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
 import java.util.Properties;
 
 public interface DirectoryHandlerLocalSpecification {
+    static String workingDirectory = System.getProperty("user.dir") + "\\directory-handler-project";
 	/**
      * Creates a local repository with the default name and config;
      */
@@ -37,14 +39,14 @@ public interface DirectoryHandlerLocalSpecification {
      * @param directoryName name of directory to create the file in
      * @param fileExtension file extension
      */
-    void createLocalFile(final String directoryName, final String fileExtension);
+    void createLocalFile(final String repositoryName, final String directoryName, final String fileExtension);
     /**
      * Creates a local directory with the specified name;
      * @param directoryName name of directory to create the file in
      * @param fileName name of file to create
      * @param fileExtension file extension
      */
-    void createLocalFile(final String directoryName, final String fileName, final String fileExtension);
+    void createLocalFile(final String repositoryName, final String directoryName, final String fileName, final String fileExtension);
     
     long getFolderSize(final String directoryName) throws FileNotFoundException, IOException;
     long getFileSize(final String directoryName, final String fileName) throws FileNotFoundException, IOException;
@@ -55,4 +57,6 @@ public interface DirectoryHandlerLocalSpecification {
     void writeToFile(final String directoryName, final String fileName, final String textToWrite) throws IOException;
     void deleteFile(final String directoryName, final String fileName) throws IOException;
     void renameFile(final String directoryName, final String fileName, final String newName) throws IOException;
+    List<String> getFileList(final String directoryName);
+    int getFileCount(final String directoryName);
 }

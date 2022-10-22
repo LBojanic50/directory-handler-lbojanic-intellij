@@ -7,10 +7,12 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 public class DirectoryHandlerLocalImplementation implements DirectoryHandlerLocalSpecification {
-	private static String workingDirectory = System.getProperty("user.dir") + "\\directory-handler-project";
+	//private static String workingDirectory = System.getProperty("user.dir") + "\\directory-handler-project";
 	//private static String workingDirectory = "D:\\JavaProjects\\directory-handler-lbojanic-intellij\\directory-handler-project";
 
 	@Override
@@ -47,14 +49,19 @@ public class DirectoryHandlerLocalImplementation implements DirectoryHandlerLoca
 	}
 
 	@Override
-	public void createLocalFile(final String directoryName, final String fileExtension) {
+	public void createLocalFile(final String repositoryName, final String directoryName, final String fileExtension) {
 		File file = new File(String.format(workingDirectory + "\\src\\directoryName\\defaultFile.%s", fileExtension));
 		try {
-			if (file.createNewFile()) {
-				System.out.println("Directory Created");
+			if(getFileCount(directoryName) <= Integer.valueOf(getProperties(repositoryName).getProperty("maxFileCount"))){
+				if (file.createNewFile()) {
+					System.out.println("Directory Created");
+				}
+				else {
+					System.out.println("File Not Created");
+				}
 			}
 			else {
-				System.out.println("File Not Created");
+				System.out.println("File count limit exceeded");
 			}
 		}
 		catch (Exception e) {
@@ -63,14 +70,19 @@ public class DirectoryHandlerLocalImplementation implements DirectoryHandlerLoca
 	}
 
 	@Override
-	public void createLocalFile(final String directoryName, final String fileName, final String fileExtension) {
+	public void createLocalFile(final String repositoryName, final String directoryName, final String fileName, final String fileExtension) {
 		File file = new File(String.format(workingDirectory + "\\src\\%s\\%s.%s", directoryName, fileName, fileExtension));
 		try {
-			if (file.createNewFile()) {
-				System.out.println("File Created");
+			if(getFileCount(directoryName) <= Integer.valueOf(getProperties(repositoryName).getProperty("maxFileCount"))){
+				if (file.createNewFile()) {
+					System.out.println("Directory Created");
+				}
+				else {
+					System.out.println("File Not Created");
+				}
 			}
 			else {
-				System.out.println("File Not Created");
+				System.out.println("File count limit exceeded");
 			}
 		}
 		catch (Exception e) {
@@ -129,10 +141,34 @@ public class DirectoryHandlerLocalImplementation implements DirectoryHandlerLoca
 	}
 
 	@Override
-	public void deleteFile(String directoryName, String fileName) throws IOException {
+	public void deleteFile(final String directoryName, final String fileName) throws IOException {
 		Path path = Paths.get(String.format(workingDirectory + "\\src\\%s\\%s", directoryName, fileName));
 		File file = path.toFile();
 		file.delete();
+	}
+
+	@Override
+	public List<String> getFileList(final String directoryName) {
+		List<String> fileList = new ArrayList<>();
+		File directory = new File(String.format(workingDirectory + "\\src\\%s", directoryName));
+		if(directory.listFiles() != null) {
+			for (File file : directory.listFiles()) {
+				fileList.add(file.getName());
+			}
+		}
+		return fileList;
+	}
+
+	@Override
+	public int getFileCount(String directoryName) {
+		int fileCount = 0;
+		File directory = new File(String.format(workingDirectory + "\\src\\%s", directoryName));
+		if(directory.listFiles() != null) {
+			for (File file : directory.listFiles()) {
+				fileCount++;
+			}
+		}
+		return fileCount;
 	}
 
 	@Override
