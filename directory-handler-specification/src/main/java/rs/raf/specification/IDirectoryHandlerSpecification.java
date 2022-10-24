@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Properties;
 
 public interface IDirectoryHandlerSpecification {
+
     /**
      * Creates a repository with the default name and config
      * @throws IOException
@@ -62,6 +63,8 @@ public interface IDirectoryHandlerSpecification {
      * @param fileExtension file extension
      */
     void createFile(final String repositoryName, final String directoryName, final String fileName, final String fileExtension);
+    void createDefaultConfig(final String repositoryName) throws IOException;
+    void createConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException;
     /**
      * Updates the config of specified repository with the specified config
      * @param repositoryName name of the repository to create
@@ -69,6 +72,7 @@ public interface IDirectoryHandlerSpecification {
      * @throws IOException
      */
     void updateConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException;
+    Properties getProperties(final String repositoryName) throws IOException;
     /**
      * Gets the size of a directory
      * @param repositoryName name of the repository the directory is in
@@ -84,14 +88,14 @@ public interface IDirectoryHandlerSpecification {
      * @return long size of the file
      */
     long getFileSize(final String repositoryName, final String directoryName, final String fileName) throws FileNotFoundException, IOException;
-    Properties getProperties(final String repositoryName, final String directoryName) throws IOException;
-    void createDefaultConfig(final String repositoryName, final String directoryName) throws IOException;
-    void createConfig(final String repositoryName, final String directoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException;
-    String arrayToString(final String repositoryName, final String[] array);
+
+    String arrayToString(final String[] array);
     void writeToFile(final String repositoryName, final String directoryName, final String fileName, final String textToWrite) throws IOException;
     void deleteFile(final String repositoryName, final String directoryName, final String fileName) throws IOException;
-    void renameFile(final String repositoryName, final String directoryName, final String fileName, final String newName) throws IOException;
-    List<String> getFileList(final String repositoryName, final String directoryName);
+    void downloadFile(final String repositoryName, final String directoryName, final String fileName, final boolean overwrite) throws IOException;
+    void downloadFile(final String repositoryName, final String directoryName, final String fileName, final String downloadPathString, final boolean overwrite) throws IOException;
+    void moveOrRenameFile(final String repositoryName, final String directoryName, final String fileName, final String newName) throws IOException;
+    List<File> getFileList(final String repositoryName, final String directoryName);
     int getFileCount(final String repositoryName, final String directoryName);
     List<File> getFilesForSearchName(final String repositoryName, final String directoryName, final String search);
     List<File> getFilesForSearchNameAndExtensions(final String repositoryName, final String directoryName, final String search, final String[] searchExtensions);
@@ -100,6 +104,5 @@ public interface IDirectoryHandlerSpecification {
     List<File> getFilesForExtensions(final String repositoryName, final String directoryName, final String[] searchExtensions);
     List<File> getFilesForExcludedExtensions(final String repositoryName, final String directoryName, final String[] searchExcludedExtensions);
     List<File> getFilesForExtensionsAndExcludedExtensions(final String repositoryName, final String directoryName, final String[] searchExtensions, final String[] searchExcludedExtensions);
-    void moveFile(final String repositoryName, final String oldDirectoryName, final String newDirectoryName);
 
 }

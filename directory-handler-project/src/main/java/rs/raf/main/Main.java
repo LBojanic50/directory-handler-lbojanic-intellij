@@ -1,7 +1,7 @@
 package rs.raf.main;
 
-import rs.raf.util.GoogleDriveAppCore;
-import rs.raf.util.LocalAppCore;
+//import rs.raf.util.GoogleDriveAppCore;
+import rs.raf.core.LocalAppCore;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -12,9 +12,9 @@ public class Main {
 			LocalAppCore localAppCore = new LocalAppCore();
 			localAppCore.startApp();
 		}
-		else if(args[0].equals("drive")) {
+		/*else if(args[0].equals("drive")) {
 			GoogleDriveAppCore googleDriveAppCore = new GoogleDriveAppCore();
 			googleDriveAppCore.startApp();
-		}	
+		}*/
 	}
 }

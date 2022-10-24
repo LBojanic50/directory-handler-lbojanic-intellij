@@ -51,8 +51,23 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     }
 
     @Override
+    public void createDefaultConfig(String repositoryName) throws IOException {
+
+    }
+
+    @Override
+    public void createConfig(String repositoryName, DirectoryHandlerConfig directoryHandlerConfig) throws IOException {
+
+    }
+
+    @Override
     public void updateConfig(String repositoryName, DirectoryHandlerConfig directoryHandlerConfig) throws IOException {
 
+    }
+
+    @Override
+    public Properties getProperties(String repositoryName) throws IOException {
+        return null;
     }
 
     @Override
@@ -66,22 +81,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     }
 
     @Override
-    public Properties getProperties(String repositoryName, String directoryName) throws IOException {
-        return null;
-    }
-
-    @Override
-    public void createDefaultConfig(String repositoryName, String directoryName) throws IOException {
-
-    }
-
-    @Override
-    public void createConfig(String repositoryName, String directoryName, DirectoryHandlerConfig directoryHandlerConfig) throws IOException {
-
-    }
-
-    @Override
-    public String arrayToString(String repositoryName, String[] array) {
+    public String arrayToString(String[] array) {
         return null;
     }
 
@@ -96,12 +96,22 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     }
 
     @Override
-    public void renameFile(String repositoryName, String directoryName, String fileName, String newName) throws IOException {
+    public void downloadFile(String repositoryName, String directoryName, String fileName, boolean overwrite) throws IOException {
 
     }
 
     @Override
-    public List<String> getFileList(String repositoryName, String directoryName) {
+    public void downloadFile(String repositoryName, String directoryName, String fileName, String downloadPathString, boolean overwrite) throws IOException {
+
+    }
+
+    @Override
+    public void moveOrRenameFile(String repositoryName, String directoryName, String fileName, String newName) throws IOException {
+
+    }
+
+    @Override
+    public List<File> getFileList(String repositoryName, String directoryName) {
         return null;
     }
 
@@ -143,10 +153,5 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     @Override
     public List<File> getFilesForExtensionsAndExcludedExtensions(String repositoryName, String directoryName, String[] searchExtensions, String[] searchExcludedExtensions) {
         return null;
-    }
-
-    @Override
-    public void moveFile(String repositoryName, String oldDirectoryName, String newDirectoryName) {
-
     }
 }
