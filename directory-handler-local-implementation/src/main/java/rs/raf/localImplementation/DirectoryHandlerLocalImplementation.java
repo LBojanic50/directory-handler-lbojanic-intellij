@@ -260,4 +260,24 @@ public class DirectoryHandlerLocalImplementation implements DirectoryHandlerLoca
 		File file = path.toFile();
 		FileUtils.writeStringToFile(file, textToWrite, "UTF-8");
 	}
+
+	@Override
+	public List<File> getFilesForExtensions(String repositoryName, String directoryName, String[] searchExtensions) {
+		return null;
+	}
+
+	@Override
+	public List<File> getFilesForExcludedExtensions(String repositoryName, String directoryName, String[] searchExcludedExtensions) {
+		return null;
+	}
+
+	@Override
+	public List<File> getFilesForExtensionsAndExcludedExtensions(String repositoryName, String directoryName, String[] searchExtensions, String[] searchExcludedExtensions) {
+		return null;
+	}
+
+	@Override
+	public void moveFile(String repositoryName, String oldDirectoryName, String newDirectoryName) {
+
+	}
 }

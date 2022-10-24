@@ -67,5 +67,9 @@ public interface DirectoryHandlerLocalSpecification {
     List<File> getFilesForSearchNameAndExtensions(final String repositoryName, final String directoryName, final String search, final String[] searchExtensions);
     List<File> getFilesForSearchNameAndExcludedExtensions(final String repositoryName, final String directoryName, final String search, final String[] searchExcludedExtensions);
     List<File> getFilesForSearchNameAndExtensionsAndExcludedExtensions(final String repositoryName, final String directoryName, final String search, final String[] searchExtensions, final String[] searchExcludedExtensions);
+    List<File> getFilesForExtensions(final String repositoryName, final String directoryName, final String[] searchExtensions);
+    List<File> getFilesForExcludedExtensions(final String repositoryName, final String directoryName, final String[] searchExcludedExtensions);
+    List<File> getFilesForExtensionsAndExcludedExtensions(final String repositoryName, final String directoryName, final String[] searchExtensions, final String[] searchExcludedExtensions);
+    void moveFile(final String repositoryName, final String oldDirectoryName, final String newDirectoryName);
 
 }
