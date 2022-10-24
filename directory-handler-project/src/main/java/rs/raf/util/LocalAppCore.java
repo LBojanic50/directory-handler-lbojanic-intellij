@@ -2,19 +2,16 @@ package rs.raf.util;
 
 import rs.raf.localImplementation.DirectoryHandlerConfigLocalImplementation;
 import rs.raf.localImplementation.DirectoryHandlerLocalImplementation;
-import rs.raf.model.DirectoryHandlerConfig;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Properties;
 
-public class LocalUtil {
+public class LocalAppCore {
 	public static Properties properties;
 	public static long folderSize = 0;
 	public static DirectoryHandlerLocalImplementation directoryHandlerLocalImplementation = null;
 	public static DirectoryHandlerConfigLocalImplementation directoryHandlerConfigLocalImplementation = null;
-	public LocalUtil() throws IOException {
+	public LocalAppCore() throws IOException {
 		directoryHandlerLocalImplementation = new DirectoryHandlerLocalImplementation();
 		directoryHandlerConfigLocalImplementation = new DirectoryHandlerConfigLocalImplementation();
 	}

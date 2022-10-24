@@ -15,17 +15,23 @@
     <version>1.0</version>
 
     <dependencies>
+<!--        <dependency>-->
+<!--            <groupId>rs.raf</groupId>-->
+<!--            <artifactId>directory-handler-google-drive-implementation</artifactId>-->
+<!--            <version>1.0</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>rs.raf</groupId>
-            <artifactId>directory-handler-google-drive-implementation</artifactId>
+            <artifactId>directory-handler-specification</artifactId>
             <version>1.0</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>rs.raf</groupId>
             <artifactId>directory-handler-local-implementation</artifactId>
             <version>1.0</version>
+            <scope>runtime</scope>
         </dependency>
-
     </dependencies>
 
     <build>

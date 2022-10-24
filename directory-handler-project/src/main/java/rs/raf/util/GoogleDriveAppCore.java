@@ -1,4 +1,4 @@
-package rs.raf.util;
+/*package rs.raf.util;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
@@ -16,7 +16,7 @@ import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.List;
 
-public class GoogleDriveUtil {
+public class GoogleDriveAppCore {
     private static final String APPLICATION_NAME = "directory-handler-lbojanic";
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     private static final String TOKENS_DIRECTORY_PATH = System.getProperty("user.dir") + "\\tokens";
@@ -33,7 +33,7 @@ public class GoogleDriveUtil {
         credentialsInputStream = new FileInputStream(CREDENTIALS_FILE_PATH);
     }
 
-    public GoogleDriveUtil() throws GeneralSecurityException, IOException {
+    public GoogleDriveAppCore() throws GeneralSecurityException, IOException {
         initVariables();
         HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         directoryHandlerGoogleDriveImplementation = new DirectoryHandlerGoogleDriveImplementation();
@@ -44,4 +44,4 @@ public class GoogleDriveUtil {
         directoryHandlerGoogleDriveImplementation.createGoogleDriveDirectory(googleDriveClient, "customDir");
     	directoryHandlerGoogleDriveImplementation.createGoogleDriveFile(googleDriveClient, "customDir", "customFile", "txt");
     }
-}
+}*/
