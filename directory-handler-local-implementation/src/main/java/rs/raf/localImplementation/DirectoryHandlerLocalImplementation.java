@@ -280,4 +280,5 @@ public class DirectoryHandlerLocalImplementation implements DirectoryHandlerLoca
 	public void moveFile(String repositoryName, String oldDirectoryName, String newDirectoryName) {
 
 	}
+
 }

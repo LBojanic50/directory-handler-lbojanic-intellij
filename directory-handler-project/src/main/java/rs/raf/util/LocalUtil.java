@@ -5,6 +5,8 @@ import rs.raf.localImplementation.DirectoryHandlerLocalImplementation;
 import rs.raf.model.DirectoryHandlerConfig;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 
 public class LocalUtil {
@@ -17,8 +19,9 @@ public class LocalUtil {
 		directoryHandlerConfigLocalImplementation = new DirectoryHandlerConfigLocalImplementation();
 	}
 	public void startApp() throws IOException {
-		DirectoryHandlerConfig directoryHandlerConfig = new DirectoryHandlerConfig("1024B", 32, new String[]{ "exe", "bat"});
+		/*DirectoryHandlerConfig directoryHandlerConfig = new DirectoryHandlerConfig("1024B", 32, new String[]{ "exe", "bat"});
 		directoryHandlerLocalImplementation.createLocalRepository("myRep", directoryHandlerConfig);
-		directoryHandlerLocalImplementation.createLocalDirectory("myRep", "myDir");
+		directoryHandlerLocalImplementation.createLocalDirectory("myRep", "myDir");*/
+
 	}
 }
