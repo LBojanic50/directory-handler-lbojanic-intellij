@@ -1,6 +1,7 @@
 package rs.raf.localImplementation;
 
 import org.apache.commons.io.FileUtils;
+import rs.raf.model.DirectoryHandlerConfig;
 import rs.raf.specification.DirectoryHandlerLocalSpecification;
 
 import java.io.*;
@@ -16,8 +17,8 @@ public class DirectoryHandlerLocalImplementation implements DirectoryHandlerLoca
 	//private static String workingDirectory = "D:\\JavaProjects\\directory-handler-lbojanic-intellij\\directory-handler-project";
 
 	@Override
-	public void createLocalDirectory() {
-		File file = new File(workingDirectory + "\\src\\defaultDirectory");
+	public void createLocalDirectory(final String repositoryName) {
+		File file = new File(String.format(workingDirectory + "\\src\\%s\\defaultDirectory", repositoryName));
 		try {
 			if (file.mkdir()) {
 				createDefaultConfig("defaultDirectory");
@@ -33,8 +34,8 @@ public class DirectoryHandlerLocalImplementation implements DirectoryHandlerLoca
 	}
 
 	@Override
-	public void createLocalDirectory(final String directoryName) {
-		File file = new File(String.format(workingDirectory + "\\src\\%s", directoryName));
+	public void createLocalDirectory(final String repositoryName, final String directoryName) {
+		File file = new File(String.format(workingDirectory + "\\src\\%s\\%s", repositoryName, directoryName));
 		try {
 			if (file.mkdir()) {
 				System.out.println("Directory Created");
@@ -104,15 +105,9 @@ public class DirectoryHandlerLocalImplementation implements DirectoryHandlerLoca
 		createDefaultConfig(repositoryName);
 	}
 
-	@Override
-	public void createLocalRepository(final String repositoryName, final String maxRepositorySize, final int maxFileCount, String[] excludedExtensions) throws IOException {
-		File file = new File(String.format(workingDirectory + "\\src\\%s", repositoryName));
-		file.mkdir();
-		createConfig(repositoryName, maxRepositorySize, maxFileCount, excludedExtensions);
-	}
 
 	@Override
-	public long getFolderSize(final String directoryName) throws IOException {
+	public long getDirectorySize(final String directoryName) throws IOException {
 		Path path = Paths.get(String.format(workingDirectory + "\\src\\%s", directoryName));
 		File file = path.toFile();
 		return FileUtils.sizeOfDirectory(file);
@@ -182,14 +177,74 @@ public class DirectoryHandlerLocalImplementation implements DirectoryHandlerLoca
 	}
 
 	@Override
-	public void createConfig(final String directoryName, final String maxRepositorySize, final int maxFileCount, final String[] excludedExtensions)throws IOException {
+	public void createLocalRepository(String repositoryName, DirectoryHandlerConfig directoryHandlerConfig) throws IOException {
+		File file = new File(String.format(workingDirectory + "\\src\\%s", repositoryName));
+		file.mkdir();
+		createConfig(repositoryName, directoryHandlerConfig);
+	}
+
+	@Override
+	public void createConfig(final String directoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException {
 		File file = new File(String.format(workingDirectory + "\\src\\%s\\config.properties", directoryName));
 		PrintWriter writer = new PrintWriter(file, "UTF-8");
-		writer.println(String.format("maxRepositorySize = %s", maxRepositorySize));
-		writer.println(String.format("maxFileCount = %s", maxFileCount));
-		writer.print(String.format("excludedExtensions = %s", arrayToString(excludedExtensions)));
+		writer.println(String.format("maxRepositorySize = %s", directoryHandlerConfig.getMaxRepositorySize()));
+		writer.println(String.format("maxFileCount = %s", directoryHandlerConfig.getMaxFileCount()));
+		writer.print(String.format("excludedExtensions = %s", arrayToString(directoryHandlerConfig.getExcludedExtensions())));
 		writer.close();
 	}
+
+	@Override
+	public List<File> getFilesForSearchName(final String repositoryName, final String directoryName, final String search) {
+		List<File> fileList = new ArrayList<>();
+		File directoryToSearch = new File(String.format(workingDirectory + "\\src\\%s\\%s", repositoryName, directoryName));
+		File[] directoryToSearchList = directoryToSearch.listFiles();
+		for(File file : directoryToSearchList){
+			if(file.getName().equalsIgnoreCase(search)){
+				fileList.add(file);
+			}
+		}
+		return fileList;
+	}
+
+	@Override
+	public List<File> getFilesForSearchNameAndExtensionsAndExcludedExtensions(String repositoryName, String directoryName, String search, String[] searchExtensions, String[] searchExcludedExtensions) {
+		List<File> fileList = new ArrayList<>();
+		File directoryToSearch = new File(String.format(workingDirectory + "\\src\\%s\\%s", repositoryName, directoryName));
+		File[] directoryToSearchList = directoryToSearch.listFiles();
+		for(File file : directoryToSearchList){
+			if(file.getName().equalsIgnoreCase(search)){
+				fileList.add(file);
+			}
+		}
+		return fileList;
+	}
+
+	@Override
+	public List<File> getFilesForSearchNameAndExtensions(String repositoryName, String directoryName, String search, String[] searchExtensions) {
+		List<File> fileList = new ArrayList<>();
+		File directoryToSearch = new File(String.format(workingDirectory + "\\src\\%s\\%s", repositoryName, directoryName));
+		File[] directoryToSearchList = directoryToSearch.listFiles();
+		for(File file : directoryToSearchList){
+			if(file.getName().equalsIgnoreCase(search)){
+				fileList.add(file);
+			}
+		}
+		return fileList;
+	}
+
+	@Override
+	public List<File> getFilesForSearchNameAndExcludedExtensions(String repositoryName, String directoryName, String search, String[] searchExcludedExtensions) {
+		List<File> fileList = new ArrayList<>();
+		File directoryToSearch = new File(String.format(workingDirectory + "\\src\\%s\\%s", repositoryName, directoryName));
+		File[] directoryToSearchList = directoryToSearch.listFiles();
+		for(File file : directoryToSearchList){
+			if(file.getName().equalsIgnoreCase(search)){
+				fileList.add(file);
+			}
+		}
+		return fileList;
+	}
+
 	@Override
 	public String arrayToString(final String[] array) {
 		String arrayString = "";

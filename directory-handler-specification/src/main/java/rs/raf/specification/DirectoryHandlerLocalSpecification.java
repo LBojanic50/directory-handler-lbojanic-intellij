@@ -1,5 +1,7 @@
 package rs.raf.specification;
 
+import rs.raf.model.DirectoryHandlerConfig;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -7,33 +9,32 @@ import java.util.List;
 import java.util.Properties;
 
 public interface DirectoryHandlerLocalSpecification {
-    static String workingDirectory = System.getProperty("user.dir") + "\\directory-handler-project";
+    String workingDirectory = System.getProperty("user.dir") + "\\directory-handler-project";
 	/**
-     * Creates a local repository with the default name and config;
+     * Creates a local repository with the default name and config
      */
 	void createLocalRepository() throws IOException;
 	/**
-     * Creates a local repository with the specified name and default config;
+     * Creates a local repository with the specified name and default config
      * @param repositoryName name of the repository to create
      */
 	void createLocalRepository(final String repositoryName) throws IOException;
     /**
-     * Creates a local repository with the specified name and default config;
+     * Creates a local repository with the specified name and default config
      * @param repositoryName name of the repository to create
-     * @param maxRepositorySize max repository size (stored in config file, 1GB by default)
-     * @param maxFileCount max file count in repository (stored in config file, 20 by default)
-     * @param excludedExtensions string array of extensions that can't be stored in repository (stored in config file, "none" by default)
+     * @param directoryHandlerConfig custom config
      */
-    void createLocalRepository(final String repositoryName, String maxRepositorySize, int maxFileCount, String[] excludedExtensions) throws IOException;
+    void createLocalRepository(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException;
     /**
-     * Creates a local directory with the default name;
+     * Creates a local directory with the default name in the specified repository
+     * @param repositoryName name of the repository to create the directory in
      */
-    void createLocalDirectory();
+    void createLocalDirectory(final String repositoryName);
     /**
-     * Creates a local directory with the specified name;
+     * Creates a local directory with the specified name
      * @param directoryName name of directory to create
      */
-    void createLocalDirectory(final String directoryName);
+    void createLocalDirectory(final String repositoryName, final String directoryName);
     /**
      * Creates a local file with the default name;
      * @param directoryName name of directory to create the file in
@@ -47,16 +48,24 @@ public interface DirectoryHandlerLocalSpecification {
      * @param fileExtension file extension
      */
     void createLocalFile(final String repositoryName, final String directoryName, final String fileName, final String fileExtension);
-    
-    long getFolderSize(final String directoryName) throws FileNotFoundException, IOException;
+    /**
+     * Gets the size of a directory
+     * @param directoryName name of the directory to get the size of
+     */
+    long getDirectorySize(final String directoryName) throws FileNotFoundException, IOException;
     long getFileSize(final String directoryName, final String fileName) throws FileNotFoundException, IOException;
 	Properties getProperties(final String directoryName) throws IOException;
 	void createDefaultConfig(final String directoryName) throws IOException;
-	void createConfig(final String directoryName, final String maxRepositorySize, final int maxFileCount, final String[] excludedExtensions) throws IOException;
+	void createConfig(final String directoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException;
 	String arrayToString(final String[] array);
     void writeToFile(final String directoryName, final String fileName, final String textToWrite) throws IOException;
     void deleteFile(final String directoryName, final String fileName) throws IOException;
     void renameFile(final String directoryName, final String fileName, final String newName) throws IOException;
     List<String> getFileList(final String directoryName);
     int getFileCount(final String directoryName);
+    List<File> getFilesForSearchName(final String repositoryName, final String directoryName, final String search);
+    List<File> getFilesForSearchNameAndExtensions(final String repositoryName, final String directoryName, final String search, final String[] searchExtensions);
+    List<File> getFilesForSearchNameAndExcludedExtensions(final String repositoryName, final String directoryName, final String search, final String[] searchExcludedExtensions);
+    List<File> getFilesForSearchNameAndExtensionsAndExcludedExtensions(final String repositoryName, final String directoryName, final String search, final String[] searchExtensions, final String[] searchExcludedExtensions);
+
 }

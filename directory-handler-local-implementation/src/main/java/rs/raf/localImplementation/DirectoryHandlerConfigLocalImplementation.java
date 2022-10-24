@@ -16,7 +16,7 @@ public class DirectoryHandlerConfigLocalImplementation implements DirectoryHandl
         properties.load(inputStream);
         properties.setProperty("maxRepositorySize", maxRepositorySize);
         OutputStream outputStream = new FileOutputStream(String.format(workingDirectory + "\\src\\%s\\config.properties", directoryName));
-        properties.store(outputStream, "updateMaxRepositorySize");
+        properties.store(outputStream, "updatedMaxRepositorySize");
     }
 
     @Override
@@ -27,7 +27,7 @@ public class DirectoryHandlerConfigLocalImplementation implements DirectoryHandl
         properties.load(inputStream);
         properties.setProperty("maxFileCount", maxFileCount);
         OutputStream outputStream = new FileOutputStream(String.format(workingDirectory + "\\src\\%s\\config.properties", directoryName));
-        properties.store(outputStream, "updateMaxRepositorySize");
+        properties.store(outputStream, "updatedMaxFileCount");
     }
 
     @Override
@@ -38,6 +38,6 @@ public class DirectoryHandlerConfigLocalImplementation implements DirectoryHandl
         properties.load(inputStream);
         properties.setProperty("excludedExtensions", excludedExtensions);
         OutputStream outputStream = new FileOutputStream(String.format(workingDirectory + "\\src\\%s\\config.properties", directoryName));
-        properties.store(outputStream, "updateMaxRepositorySize");
+        properties.store(outputStream, "updatedExcludedExtensions");
     }
 }
