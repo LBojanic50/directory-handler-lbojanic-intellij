@@ -7,20 +7,32 @@ import rs.raf.specification.IDirectoryHandlerSpecification;
 
 import java.io.*;
 import java.nio.file.*;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpecification {
+public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpecification<File> {
 	//private static final String workingDirectory = System.getProperty("user.dir") + "\\directory-handler-project";
 	//private static final String workingDirectory = "D:\\JavaProjects\\directory-handler-lbojanic-intellij\\directory-handler-project";
 	//private static final String workingDirectory = System.getProperty("user.dir") + "\\directory-handler-project";
-	public static Path workingDirectory = Paths.get("directory-handler-project");
-	public static Path homeDirectory = Paths.get(System.getProperty("user.home"));
-	public static String defaultRepositoryName = "defaultRepository";
-	public static String defaultDirectoryName = "defaultDirectory";
-	public static String defaultFileName = "defaultFile";
-	public static String propertiesFileName = "config.properties";
+	private static Path workingDirectory = Paths.get("directory-handler-project");
+	private static Path homeDirectory = Paths.get(System.getProperty("user.home"));
+	private static String defaultRepositoryName = "defaultRepository";
+	private static String defaultDirectoryName = "defaultDirectory";
+	private static String defaultFileName = "defaultFile";
+	private static String propertiesFileName = "config.properties";
+
+	@Override
+	public Object getCredentials(final InputStream inputStream, final String CREDENTIALS_FILE_PATH, final Object HTTP_TRANSPORT, final Object JSON_FACTORY, final List SCOPES, final String TOKENS_DIRECTORY_PATH) throws UnsupportedOperationException, FileNotFoundException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void authorizeGoogleDriveClient() throws IOException, GeneralSecurityException {
+		throw new UnsupportedOperationException();
+	}
+
 	@Override
 	public void createRepository() throws IOException {
 		File file = workingDirectory.resolve(defaultRepositoryName).toFile();
@@ -151,10 +163,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
 	}
 	@Override
 	public void updateConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException {
-		Properties properties = new Properties();
-		FileInputStream fileInputStream = new FileInputStream(workingDirectory.resolve(repositoryName).resolve(propertiesFileName).toAbsolutePath().toString());
-		InputStream inputStream = fileInputStream;
-		properties.load(inputStream);
+		Properties properties = getProperties(repositoryName);
 		properties.setProperty("maxRepositorySize", directoryHandlerConfig.getMaxRepositorySize());
 		properties.setProperty("maxFileCount", Integer.toString(directoryHandlerConfig.getMaxFileCount()));
 		properties.setProperty("excludedExtensions", arrayToString(directoryHandlerConfig.getExcludedExtensions()));
@@ -247,6 +256,24 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
 			System.out.println("File already exists");
 		}
 	}
+
+	@Override
+	public String getRepositoryIdByName(final String directoryName) throws IOException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<File> getFileListInRoot() {
+		List<File> fileList = new ArrayList<>();
+		File directory = workingDirectory.toFile();
+		if(directory.listFiles() != null) {
+			for (File file : directory.listFiles()) {
+				fileList.add(file);
+			}
+		}
+		return fileList;
+	}
+
 	@Override
 	public List<File> getFileList(final String repositoryName, final String directoryName) {
 		List<File> fileList = new ArrayList<>();

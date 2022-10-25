@@ -5,11 +5,17 @@ import rs.raf.model.DirectoryHandlerConfig;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.security.GeneralSecurityException;
 import java.util.List;
 import java.util.Properties;
 
-public interface IDirectoryHandlerSpecification {
-
+public interface IDirectoryHandlerSpecification<T> {
+    void authorizeGoogleDriveClient() throws IOException, GeneralSecurityException;
+    /**
+     * */
+    Object getCredentials(final InputStream inputStream, final String CREDENTIALS_FILE_PATH, final Object HTTP_TRANSPORT, final Object JSON_FACTORY, final List<String> SCOPES, final String TOKENS_DIRECTORY_PATH) throws UnsupportedOperationException, IOException;
+    String getRepositoryIdByName(final String directoryName) throws IOException;
     /**
      * Creates a repository with the default name and config
      * @throws IOException
@@ -54,7 +60,7 @@ public interface IDirectoryHandlerSpecification {
      * @param fileExtension file extension
      * @apiNote pass directoryName as empty string to target the repository root
      */
-    void createFile(final String repositoryName, final String directoryName, final String fileExtension);
+    void createFile(final String repositoryName, final String directoryName, final String fileExtension) throws Exception;
     /**
      * Creates a file with the specified name;
      * @param repositoryName name of the repository to create the directory in
@@ -62,7 +68,7 @@ public interface IDirectoryHandlerSpecification {
      * @param fileName name of file to create
      * @param fileExtension file extension
      */
-    void createFile(final String repositoryName, final String directoryName, final String fileName, final String fileExtension);
+    void createFile(final String repositoryName, final String directoryName, final String fileName, final String fileExtension) throws Exception;
     void createDefaultConfig(final String repositoryName) throws IOException;
     void createConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException;
     /**
@@ -95,14 +101,15 @@ public interface IDirectoryHandlerSpecification {
     void downloadFile(final String repositoryName, final String directoryName, final String fileName, final boolean overwrite) throws IOException;
     void downloadFile(final String repositoryName, final String directoryName, final String fileName, final String downloadPathString, final boolean overwrite) throws IOException;
     void moveOrRenameFile(final String repositoryName, final String directoryName, final String fileName, final String newName) throws IOException;
-    List<File> getFileList(final String repositoryName, final String directoryName);
     int getFileCount(final String repositoryName, final String directoryName);
-    List<File> getFilesForSearchName(final String repositoryName, final String directoryName, final String search);
-    List<File> getFilesForSearchNameAndExtensions(final String repositoryName, final String directoryName, final String search, final String[] searchExtensions);
-    List<File> getFilesForSearchNameAndExcludedExtensions(final String repositoryName, final String directoryName, final String search, final String[] searchExcludedExtensions);
-    List<File> getFilesForSearchNameAndExtensionsAndExcludedExtensions(final String repositoryName, final String directoryName, final String search, final String[] searchExtensions, final String[] searchExcludedExtensions);
-    List<File> getFilesForExtensions(final String repositoryName, final String directoryName, final String[] searchExtensions);
-    List<File> getFilesForExcludedExtensions(final String repositoryName, final String directoryName, final String[] searchExcludedExtensions);
-    List<File> getFilesForExtensionsAndExcludedExtensions(final String repositoryName, final String directoryName, final String[] searchExtensions, final String[] searchExcludedExtensions);
+    List<T> getFileListInRoot() throws IOException;
+    List<T> getFileList(final String repositoryName, final String directoryName) throws IOException;
+    List<T> getFilesForSearchName(final String repositoryName, final String directoryName, final String search);
+    List<T> getFilesForSearchNameAndExtensions(final String repositoryName, final String directoryName, final String search, final String[] searchExtensions);
+    List<T> getFilesForSearchNameAndExcludedExtensions(final String repositoryName, final String directoryName, final String search, final String[] searchExcludedExtensions);
+    List<T> getFilesForSearchNameAndExtensionsAndExcludedExtensions(final String repositoryName, final String directoryName, final String search, final String[] searchExtensions, final String[] searchExcludedExtensions);
+    List<T> getFilesForExtensions(final String repositoryName, final String directoryName, final String[] searchExtensions);
+    List<T> getFilesForExcludedExtensions(final String repositoryName, final String directoryName, final String[] searchExcludedExtensions);
+    List<T> getFilesForExtensionsAndExcludedExtensions(final String repositoryName, final String directoryName, final String[] searchExtensions, final String[] searchExcludedExtensions);
 
 }
