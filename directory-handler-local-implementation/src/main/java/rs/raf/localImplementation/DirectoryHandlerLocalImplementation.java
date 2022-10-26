@@ -67,6 +67,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
 			e.printStackTrace();
 		}
 	}
+
 	@Override
 	public void createRepository(final DirectoryHandlerConfig directoryHandlerConfig) throws IOException {
 		File file = workingDirectory.resolve(defaultRepositoryName).toFile();
@@ -86,11 +87,11 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
 	}
 	@Override
 	public void createRepository(final String repositoryName, DirectoryHandlerConfig directoryHandlerConfig) throws IOException {
-		File file = workingDirectory.resolve(defaultRepositoryName).toFile();
+		File file = workingDirectory.resolve(repositoryName).toFile();
 		try {
 			if (file.mkdir()) {
 				System.out.println("Repository Created");
-				createConfig(defaultRepositoryName, directoryHandlerConfig);
+				createConfig(repositoryName, directoryHandlerConfig);
 
 			}
 			else {
@@ -103,7 +104,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
 	}
 	@Override
 	public void createDirectory(final String repositoryName) {
-		File file = workingDirectory.resolve(defaultRepositoryName).resolve(defaultDirectoryName).toFile();
+		File file = workingDirectory.resolve(repositoryName).resolve(defaultDirectoryName).toFile();
 		try {
 			if (file.mkdir()) {
 				System.out.println("Directory Created");
@@ -170,6 +171,12 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
 		OutputStream outputStream = new FileOutputStream(workingDirectory.resolve(repositoryName).resolve(propertiesFileName).toAbsolutePath().toString());
 		properties.store(outputStream, "updatedConfig");
 	}
+
+	@Override
+	public long getRepositorySize(final String repositoryName) {
+		return FileUtils.sizeOfDirectory(workingDirectory.resolve(repositoryName).toFile());
+	}
+
 	@Override
 	public long getDirectorySize(final String repositoryName, final String directoryName) throws FileNotFoundException, IOException {
 		return FileUtils.sizeOfDirectory(workingDirectory.resolve(repositoryName).resolve(directoryName).toFile());
@@ -178,6 +185,12 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
 	public long getFileSize(final String repositoryName, final String directoryName, final String fileName) throws FileNotFoundException, IOException {
 		return FileUtils.sizeOf(workingDirectory.resolve(repositoryName).resolve(directoryName).resolve(fileName).toFile());
 	}
+
+	@Override
+	public List<File> getFileListInDirectory(String directoryName) throws IOException {
+		return null;
+	}
+
 	@Override
 	public void createDefaultConfig(final String repositoryName) throws IOException {
 		File file = workingDirectory.resolve(repositoryName).resolve(propertiesFileName).toFile();
@@ -208,7 +221,12 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
 	}
 	@Override
 	public void writeToFile(final String repositoryName, final String directoryName, final String fileName, final String textToWrite) throws IOException {
-		FileUtils.writeStringToFile(workingDirectory.resolve(repositoryName).resolve(directoryName).resolve(fileName).toFile(), textToWrite, "UTF-8");
+		if(getRepositorySize(repositoryName) + textToWrite.getBytes().length > Integer.valueOf(getProperties(repositoryName).getProperty("maxRepositorySize"))){
+			System.out.println("Max Repository Size Exceeded");
+		}
+		else{
+			FileUtils.writeStringToFile(workingDirectory.resolve(repositoryName).resolve(directoryName).resolve(fileName).toFile(), textToWrite, "UTF-8");
+		}
 	}
 	@Override
 	public void deleteFile(final String repositoryName, final String directoryName, final String fileName) throws IOException {
@@ -258,11 +276,6 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
 	}
 
 	@Override
-	public String getRepositoryIdByName(final String directoryName) throws IOException {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public List<File> getFileListInRoot() {
 		List<File> fileList = new ArrayList<>();
 		File directory = workingDirectory.toFile();
@@ -272,6 +285,16 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
 			}
 		}
 		return fileList;
+	}
+
+	@Override
+	public List<File> getFileListForRepository(String repositoryName) throws IOException {
+		return null;
+	}
+
+	@Override
+	public List<File> getAllFiles(String directoryName) throws IOException {
+		return null;
 	}
 
 	@Override
@@ -405,5 +428,10 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
 			}
 		}
 		return fileList;
+	}
+
+	@Override
+	public List<String> getRepositoryIdsByName(String repositoryName) throws IOException {
+		throw new UnsupportedOperationException();
 	}
 }

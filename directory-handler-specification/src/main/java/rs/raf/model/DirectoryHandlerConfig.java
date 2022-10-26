@@ -10,9 +10,9 @@ public class DirectoryHandlerConfig {
         this.excludedExtensions = excludedExtensions;
     }
     public DirectoryHandlerConfig(){
-        this.maxRepositorySize = "1073741824B";
+        this.maxRepositorySize = "1073741824";
         this.maxFileCount = 20;
-        this.excludedExtensions = new String[] { "none" };
+        this.excludedExtensions = new String[] { "" };
     }
     public String getMaxRepositorySize() {
         return maxRepositorySize;

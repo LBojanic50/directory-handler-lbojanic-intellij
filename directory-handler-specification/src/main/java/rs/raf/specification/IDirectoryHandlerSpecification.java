@@ -15,7 +15,7 @@ public interface IDirectoryHandlerSpecification<T> {
     /**
      * */
     Object getCredentials(final InputStream inputStream, final String CREDENTIALS_FILE_PATH, final Object HTTP_TRANSPORT, final Object JSON_FACTORY, final List<String> SCOPES, final String TOKENS_DIRECTORY_PATH) throws UnsupportedOperationException, IOException;
-    String getRepositoryIdByName(final String directoryName) throws IOException;
+    List<String> getRepositoryIdsByName(final String repositoryName) throws IOException;
     /**
      * Creates a repository with the default name and config
      * @throws IOException
@@ -80,11 +80,11 @@ public interface IDirectoryHandlerSpecification<T> {
     void updateConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException;
     Properties getProperties(final String repositoryName) throws IOException;
     /**
-     * Gets the size of a directory
-     * @param repositoryName name of the repository the directory is in
-     * @param directoryName name of the directory to get the size of
-     * @return long size of the directory
+     * Gets the size of a repository
+     * @param repositoryName name of the repository to get the size of
+     * @return long size of the repository
      */
+    long getRepositorySize(final String repositoryName);
     long getDirectorySize(final String repositoryName, final String directoryName) throws FileNotFoundException, IOException;
     /**
      * Gets the size of a directory
@@ -94,7 +94,7 @@ public interface IDirectoryHandlerSpecification<T> {
      * @return long size of the file
      */
     long getFileSize(final String repositoryName, final String directoryName, final String fileName) throws FileNotFoundException, IOException;
-
+    List<T> getFileListInDirectory(final String directoryName) throws IOException;
     String arrayToString(final String[] array);
     void writeToFile(final String repositoryName, final String directoryName, final String fileName, final String textToWrite) throws IOException;
     void deleteFile(final String repositoryName, final String directoryName, final String fileName) throws IOException;
@@ -103,6 +103,8 @@ public interface IDirectoryHandlerSpecification<T> {
     void moveOrRenameFile(final String repositoryName, final String directoryName, final String fileName, final String newName) throws IOException;
     int getFileCount(final String repositoryName, final String directoryName);
     List<T> getFileListInRoot() throws IOException;
+    List<T> getFileListForRepository(final String repositoryName) throws IOException;
+    List<T> getAllFiles(final String directoryName) throws IOException;
     List<T> getFileList(final String repositoryName, final String directoryName) throws IOException;
     List<T> getFilesForSearchName(final String repositoryName, final String directoryName, final String search);
     List<T> getFilesForSearchNameAndExtensions(final String repositoryName, final String directoryName, final String search, final String[] searchExtensions);
