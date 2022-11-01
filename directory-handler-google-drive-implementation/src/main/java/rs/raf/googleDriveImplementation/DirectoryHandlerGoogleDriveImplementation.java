@@ -20,34 +20,40 @@ import rs.raf.model.DirectoryHandlerConfig;
 import rs.raf.specification.IDirectoryHandlerSpecification;
 
 import java.io.*;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.util.*;
 
-public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHandlerSpecification<File>{
+public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHandlerSpecification<File> {
     private static Path workingDirectory = Paths.get("directory-handler-project");
     private static Drive googleDriveClient;
     private static String defaultRepositoryName = "defaultRepository";
     private static String defaultDirectoryName = "defaultDirectory";
     private static String defaultFileName = "defaultFile";
     private static String propertiesFileName = "config.properties";
-    public static List<File> fileListInRoot;
+    public static List<File> allFilesList;
     private static String APPLICATION_NAME = "directory-handler-lbojanic";
     private static JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     private static String TOKENS_DIRECTORY_PATH = workingDirectory.resolve("tokens").toString();
     private static List<String> SCOPES = Arrays.asList(DriveScopes.DRIVE, DriveScopes.DRIVE_APPDATA, DriveScopes.DRIVE_FILE, DriveScopes.DRIVE_METADATA, DriveScopes.DRIVE_SCRIPTS);
     private static String CREDENTIALS_FILE_PATH = workingDirectory.resolve("credentials.json").toString();
     private static HttpTransport HTTP_TRANSPORT = null;
+
     @Override
     public void authorizeGoogleDriveClient() throws IOException, GeneralSecurityException {
         InputStream credentialsInputStream = new FileInputStream(CREDENTIALS_FILE_PATH);
         HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         Credential credentials = (Credential) getCredentials(credentialsInputStream, CREDENTIALS_FILE_PATH, HTTP_TRANSPORT, JSON_FACTORY, SCOPES, TOKENS_DIRECTORY_PATH);
         googleDriveClient = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, credentials).setApplicationName(APPLICATION_NAME).build();
-        fileListInRoot = getFileListInRoot();
+        allFilesList = getAllFilesList();
     }
 
+    @Override
+    public List<File> getFileList(final String repositoryName, final String directoryName) {
+        return null;
+    }
 
     @Override
     public Object getCredentials(final InputStream inputStream, final String CREDENTIALS_FILE_PATH, final Object HTTP_TRANSPORT, final Object JSON_FACTORY, final List SCOPES, final String TOKENS_DIRECTORY_PATH) throws IOException {
@@ -63,32 +69,13 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     }
 
     @Override
-    public List<String> getRepositoryIdsByName(final String repositoryName) throws IOException {
-        List<String> directoryIdsList = new ArrayList<>();
-
-        for(File file : fileListInRoot){
-            if(file.getMimeType().equals("application/vnd.google-apps.folder")) {
-                directoryIdsList.add(file.getId());
+    public String getFileIdByName(final String fileName) throws IOException {
+        for (File file : allFilesList) {
+            if(file.getName().equals(fileName)){
+                return file.getId();
             }
         }
-        return directoryIdsList;
-    }
-
-    @Override
-    public void createRepository() throws IOException {
-        File fileMetadata = new File();
-        fileMetadata.setName(defaultRepositoryName);
-        fileMetadata.setMimeType("application/vnd.google-apps.folder");
-        try {
-            File file = googleDriveClient.files().create(fileMetadata).setFields("id").execute();
-            System.out.println("Folder ID: " + file.getId());
-        }
-        catch (GoogleJsonResponseException e) {
-            // TODO(developer) - handle error appropriately
-            System.err.println("Unable to create folder: " + e.getDetails());
-            throw e;
-        }
-        createDefaultConfig(defaultRepositoryName);
+        return null;
     }
 
     @Override
@@ -97,7 +84,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         fileMetadata.setName(repositoryName);
         fileMetadata.setMimeType("application/vnd.google-apps.folder");
         try {
-            File file = googleDriveClient.files().create(fileMetadata).setFields("id").execute();
+            File file = googleDriveClient.files().create(fileMetadata).setFields("id, name, mimeType").execute();
             System.out.println("Folder ID: " + file.getId());
         }
         catch (GoogleJsonResponseException e) {
@@ -105,24 +92,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             System.err.println("Unable to create folder: " + e.getDetails());
             throw e;
         }
-        createDefaultConfig(defaultRepositoryName);
-    }
-
-    @Override
-    public void createRepository(final DirectoryHandlerConfig directoryHandlerConfig) throws IOException {
-        File fileMetadata = new File();
-        fileMetadata.setName(defaultRepositoryName);
-        fileMetadata.setMimeType("application/vnd.google-apps.folder");
-        try {
-            File file = googleDriveClient.files().create(fileMetadata).setFields("id").execute();
-            System.out.println("Folder ID: " + file.getId());
-        }
-        catch (GoogleJsonResponseException e) {
-            // TODO(developer) - handle error appropriately
-            System.err.println("Unable to create folder: " + e.getDetails());
-            throw e;
-        }
-        createConfig(defaultRepositoryName, directoryHandlerConfig);
+        createDefaultConfig(repositoryName);
     }
 
     @Override
@@ -131,7 +101,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         fileMetadata.setName(repositoryName);
         fileMetadata.setMimeType("application/vnd.google-apps.folder");
         try {
-            File file = googleDriveClient.files().create(fileMetadata).setFields("id").execute();
+            File file = googleDriveClient.files().create(fileMetadata).setFields("id, name, mimeType").execute();
             System.out.println("Folder ID: " + file.getId());
         }
         catch (GoogleJsonResponseException e) {
@@ -141,30 +111,45 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         }
         createConfig(repositoryName, directoryHandlerConfig);
     }
-
     @Override
-    public void createDirectory(final String repositoryName) {
-
-    }
-
-    @Override
-    public void createDirectory(final String repositoryName, final String directoryName) {
-
-    }
-    @Override
-    public void createFile(final String repositoryName, final String directoryName, final String fileExtension) throws IOException {
+    public void createDirectory(final String repositoryName, final String directoryName) throws IOException {
+        List<String> path = List.of(directoryName.split("/"));
+        List<String> pathIds = new ArrayList<>();
         File fileMetadata = new File();
-        fileMetadata.setName(defaultFileName + "." + fileExtension);
-        fileMetadata.setParents(getRepositoryIdsByName(repositoryName));
+        fileMetadata.setName(directoryName);
+        fileMetadata.setMimeType("application/vnd.google-apps.folder");
+        if(path.size() == 1){
+            fileMetadata.setParents(Collections.singletonList(getFileIdByName(path.get(0))));
+        }
+        else{
+            for(int i = 0; i < path.size(); i++){
+                if(i != path.size() - 1){
+                    pathIds.add(getFileIdByName(path.get(i)));
+                }
+            }
+            fileMetadata.setParents(pathIds);
+        }
         try {
-            File file = googleDriveClient.files().create(fileMetadata).setFields("id, name, parents").execute();
-            System.out.println("File ID: " + file.getId());
-
+            File file = googleDriveClient.files().create(fileMetadata).setFields("id, name, parents, mimeType").execute();
+            System.out.println("Folder ID: " + file.getId());
         }
         catch (GoogleJsonResponseException e) {
-            System.err.println("Unable to upload file: " + e.getDetails());
+            // TODO(developer) - handle error appropriately
+            System.err.println("Unable to create folder: " + e.getDetails());
             throw e;
         }
+    }
+    public void getFileIdsInDirectory(){
+
+    }
+    @Override
+    public boolean createFile(final String repositoryName, final String fileName, final String fileExtension) throws Exception, FileAlreadyExistsException {
+        return false;
+    }
+
+    @Override
+    public boolean createFile(final String repositoryName, final String directoryName, final String fileName, final String fileExtension) throws Exception, FileAlreadyExistsException {
+        return false;
     }
 
     @Override
@@ -172,11 +157,29 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         return FileUtils.sizeOfDirectory(workingDirectory.resolve(repositoryName).toFile());
     }
 
-    @Override
-    public void createFile(final String repositoryName, final String directoryName, final String fileName, final String fileExtension) throws IOException {
+    public List<String> moveFileToFolder(String fileId, String folderId) throws IOException {
+        File file = googleDriveClient.files().get(fileId)
+                .setFields("id, parents")
+                .execute();
+        StringBuilder previousParents = new StringBuilder();
+        for (String parent : file.getParents()) {
+            previousParents.append(parent);
+            previousParents.append(',');
+        }
+        try {
+            // Move the file to the new folder
+            file = googleDriveClient.files().update(fileId, null)
+                    .setAddParents(folderId)
+                    .setRemoveParents(previousParents.toString())
+                    .setFields("id, parents")
+                    .execute();
 
+            return file.getParents();
+        } catch (GoogleJsonResponseException e) {
+            System.err.println("Unable to move file: " + e.getDetails());
+            throw e;
+        }
     }
-
     @Override
     public void createDefaultConfig(final String repositoryName) throws IOException {
 
@@ -239,7 +242,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         }*/
     }
 
-    @Override
+    /*@Override
     public List<File> getAllFiles(final String directoryName) throws IOException {
         List<File> fileList = new ArrayList<>();
         FileList result = googleDriveClient.files().list().setQ(String.format("'%s' in parents and trashed = false", directoryName)).setFields("nextPageToken, files(id, name, parents, mimeType)").execute();
@@ -256,9 +259,9 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             }
         }
         return fileList;
-    }
+    }*/
 
-    @Override
+    /*@Override
     public List<File> getFileListForRepository(final String repositoryName) throws IOException {
         List<File> allFilesForRepository = new ArrayList<>();
         for(File repository : fileListInRoot){
@@ -268,7 +271,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             }
         }
         return allFilesForRepository;
-    }
+    }*/
 
     @Override
     public void downloadFile(final String repositoryName, final String directoryName, final String fileName, final String downloadPathString, boolean overwrite) throws IOException {
@@ -279,20 +282,17 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     public void moveOrRenameFile(final String repositoryName, final String directoryName, final String fileName, final String newName) throws IOException {
 
     }
+
     @Override
     public int getFileCount(final String repositoryName, final String directoryName) {
         return 0;
     }
-    @Override
-    public List<File> getFileList(final String repositoryName, final String directoryName) throws IOException {
-        return null;
-    }
 
     @Override
-    public List<File> getFileListInRoot() throws IOException {
+    public List<File> getAllFilesList() throws IOException {
         List<File> fileList = new ArrayList<>();
-        //TODO possible optional root in folder!!!!
-        FileList result = googleDriveClient.files().list().setQ("'root' in parents and trashed = false").setFields("nextPageToken, files(id, name, parents, mimeType)").execute();
+        //TODO possible sqtQ root in folder!!!!
+        FileList result = googleDriveClient.files().list().setFields("nextPageToken, files(id, name, parents, mimeType)").execute();
         List<File> files = result.getFiles();
         if (files == null || files.isEmpty()) {
             System.out.println("No files found.");
@@ -304,11 +304,10 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         }
         return fileList;
     }
-
     @Override
     public List<File> getFileListInDirectory(final String directoryName) throws IOException {
         List<File> fileList = new ArrayList<>();
-        FileList result = googleDriveClient.files().list().setQ(String.format("'%s' in parents and trashed = false", directoryName)).setFields("nextPageToken, files(id, name, parents)").execute();
+        FileList result = googleDriveClient.files().list().setQ(String.format("'%s' in parents and trashed = false", directoryName)).setFields("nextPageToken, files(id, name, parents, mimeType)").execute();
         List<File> files = result.getFiles();
         if (files == null || files.isEmpty()) {
             System.out.println("No files found.");
@@ -316,41 +315,35 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         else {
             for (File file : files) {
                 fileList.add(file);
+
             }
         }
         return fileList;
     }
-
     @Override
     public List<File> getFilesForSearchName(final String repositoryName, final String directoryName, final String search) {
         return null;
     }
-
     @Override
     public List<File> getFilesForSearchNameAndExtensions(final String repositoryName, final String directoryName, final String search, final String[] searchExtensions) {
         return null;
     }
-
     @Override
     public List<File> getFilesForSearchNameAndExcludedExtensions(final String repositoryName, final String directoryName, final String search, final String[] searchExcludedExtensions) {
         return null;
     }
-
     @Override
     public List<File> getFilesForSearchNameAndExtensionsAndExcludedExtensions(final String repositoryName, final String directoryName, final String search, final String[] searchExtensions, final String[] searchExcludedExtensions) {
         return null;
     }
-
     @Override
     public List<File> getFilesForExtensions(final String repositoryName, final String directoryName, final String[] searchExtensions) {
         return null;
     }
-
     @Override
     public List<File> getFilesForExcludedExtensions(final String repositoryName, final String directoryName, final String[] searchExcludedExtensions) {
         return null;
     }
-
     @Override
     public List<File> getFilesForExtensionsAndExcludedExtensions(final String repositoryName, final String directoryName, final String[] searchExtensions, final String[] searchExcludedExtensions) {
         return null;

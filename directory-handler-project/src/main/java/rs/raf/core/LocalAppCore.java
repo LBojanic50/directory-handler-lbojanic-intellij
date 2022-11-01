@@ -24,7 +24,7 @@ public class LocalAppCore {
 		directoryHandlerLocalImplementation = new DirectoryHandlerLocalImplementation();
 	}
 	public void startApp() throws IOException {
-		String initialSelection;
+		/*String initialSelection;
 		String repositoryName;
 		String configType;
 		String maxRepositorySize;
@@ -62,6 +62,7 @@ public class LocalAppCore {
 		}
 		else if(initialSelection.equals("2")){
 			System.out.println("selected a repository");
-		}
+		}*/
+		directoryHandlerLocalImplementation.createRepository("testRep");
 	}
 }
