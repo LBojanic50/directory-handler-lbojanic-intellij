@@ -4,6 +4,7 @@ import org.apache.commons.io.FileUtils;
 import rs.raf.localImplementation.DirectoryHandlerLocalImplementation;
 import rs.raf.model.DirectoryHandlerConfig;
 import rs.raf.model.DirectoryHandlerFile;
+import rs.raf.model.LocalFile;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -63,6 +64,9 @@ public class LocalAppCore {
 		else if(initialSelection.equals("2")){
 			System.out.println("selected a repository");
 		}*/
-		directoryHandlerLocalImplementation.createRepository("testRep");
+		List<LocalFile> fileListInDirectory = directoryHandlerLocalImplementation.getFilesForExtensions("GeRuMap", "java", true, true, false);
+		for(LocalFile file : fileListInDirectory){
+			System.out.println(file.getFile().getName() + " : " + file.getFileMetadata().creationTime());
+		}
 	}
 }

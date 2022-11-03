@@ -15,7 +15,6 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
 import com.google.api.services.drive.model.FileList;
-import org.apache.commons.io.FileUtils;
 import rs.raf.model.DirectoryHandlerConfig;
 import rs.raf.specification.IDirectoryHandlerSpecification;
 
@@ -40,21 +39,17 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     private static List<String> SCOPES = Arrays.asList(DriveScopes.DRIVE, DriveScopes.DRIVE_APPDATA, DriveScopes.DRIVE_FILE, DriveScopes.DRIVE_METADATA, DriveScopes.DRIVE_SCRIPTS);
     private static String CREDENTIALS_FILE_PATH = workingDirectory.resolve("credentials.json").toString();
     private static HttpTransport HTTP_TRANSPORT = null;
-
+    public DirectoryHandlerGoogleDriveImplementation() throws GeneralSecurityException, IOException {
+        authorizeGoogleDriveClient();
+    }
     @Override
     public void authorizeGoogleDriveClient() throws IOException, GeneralSecurityException {
         InputStream credentialsInputStream = new FileInputStream(CREDENTIALS_FILE_PATH);
         HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         Credential credentials = (Credential) getCredentials(credentialsInputStream, CREDENTIALS_FILE_PATH, HTTP_TRANSPORT, JSON_FACTORY, SCOPES, TOKENS_DIRECTORY_PATH);
         googleDriveClient = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, credentials).setApplicationName(APPLICATION_NAME).build();
-        allFilesList = getAllFilesList();
+        allFilesList = getFileListInDirectory("", true, true, true);
     }
-
-    @Override
-    public List<File> getFileList(final String repositoryName, final String directoryName) {
-        return null;
-    }
-
     @Override
     public Object getCredentials(final InputStream inputStream, final String CREDENTIALS_FILE_PATH, final Object HTTP_TRANSPORT, final Object JSON_FACTORY, final List SCOPES, final String TOKENS_DIRECTORY_PATH) throws IOException {
         if (inputStream == null) {
@@ -67,17 +62,14 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         Credential credential = new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
         return credential;
     }
-
     @Override
-    public String getFileIdByName(final String fileName) throws IOException {
-        for (File file : allFilesList) {
-            if(file.getName().equals(fileName)){
-                return file.getId();
-            }
-        }
+    public String getFileIdByName(String fileName) throws IOException {
         return null;
     }
-
+    @Override
+    public String getFileIdByNameInRepository(List<File> fileListInRepository, String fileName) throws IOException {
+        return null;
+    }
     @Override
     public void createRepository(final String repositoryName) throws IOException {
         File fileMetadata = new File();
@@ -94,7 +86,6 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         }
         createDefaultConfig(repositoryName);
     }
-
     @Override
     public void createRepository(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException {
         File fileMetadata = new File();
@@ -110,55 +101,35 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             throw e;
         }
         createConfig(repositoryName, directoryHandlerConfig);
-    }
-    @Override
-    public void createDirectory(final String repositoryName, final String directoryName) throws IOException {
-        List<String> path = List.of(directoryName.split("/"));
-        List<String> pathIds = new ArrayList<>();
-        File fileMetadata = new File();
-        fileMetadata.setName(directoryName);
-        fileMetadata.setMimeType("application/vnd.google-apps.folder");
-        if(path.size() == 1){
-            fileMetadata.setParents(Collections.singletonList(getFileIdByName(path.get(0))));
-        }
-        else{
-            for(int i = 0; i < path.size(); i++){
-                if(i != path.size() - 1){
-                    pathIds.add(getFileIdByName(path.get(i)));
-                }
-            }
-            fileMetadata.setParents(pathIds);
-        }
-        try {
-            File file = googleDriveClient.files().create(fileMetadata).setFields("id, name, parents, mimeType").execute();
-            System.out.println("Folder ID: " + file.getId());
-        }
-        catch (GoogleJsonResponseException e) {
-            // TODO(developer) - handle error appropriately
-            System.err.println("Unable to create folder: " + e.getDetails());
-            throw e;
-        }
-    }
-    public void getFileIdsInDirectory(){
 
     }
     @Override
-    public boolean createFile(final String repositoryName, final String fileName, final String fileExtension) throws Exception, FileAlreadyExistsException {
+    public void createDirectory(final String directoryPathString) throws IOException, FileAlreadyExistsException {
+
+    }
+    @Override
+    public boolean createFile(final String filePathString) throws Exception, FileAlreadyExistsException {
         return false;
     }
-
     @Override
-    public boolean createFile(final String repositoryName, final String directoryName, final String fileName, final String fileExtension) throws Exception, FileAlreadyExistsException {
-        return false;
-    }
+    public void createDefaultConfig(final String repositoryName) throws IOException, FileAlreadyExistsException {
 
+    }
     @Override
-    public long getRepositorySize(final String repositoryName) {
-        return FileUtils.sizeOfDirectory(workingDirectory.resolve(repositoryName).toFile());
-    }
+    public void createConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException, FileAlreadyExistsException {
 
-    public List<String> moveFileToFolder(String fileId, String folderId) throws IOException {
-        File file = googleDriveClient.files().get(fileId)
+    }
+    @Override
+    public void updateConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException, FileAlreadyExistsException {
+
+    }
+    @Override
+    public Properties getProperties(final String repositoryName) throws IOException {
+        return null;
+    }
+    @Override
+    public void moveOrRenameFile(final String oldPathString, final String newPathString) throws IOException {
+        File file = googleDriveClient.files().get(oldPathString)
                 .setFields("id, parents")
                 .execute();
         StringBuilder previousParents = new StringBuilder();
@@ -168,184 +139,100 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         }
         try {
             // Move the file to the new folder
-            file = googleDriveClient.files().update(fileId, null)
-                    .setAddParents(folderId)
+            file = googleDriveClient.files().update(oldPathString, null)
+                    .setAddParents(newPathString)
                     .setRemoveParents(previousParents.toString())
                     .setFields("id, parents")
                     .execute();
-
-            return file.getParents();
         } catch (GoogleJsonResponseException e) {
             System.err.println("Unable to move file: " + e.getDetails());
             throw e;
         }
     }
     @Override
-    public void createDefaultConfig(final String repositoryName) throws IOException {
-
-    }
-
-    @Override
-    public void createConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException {
-
-    }
-
-    @Override
-    public void updateConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException {
-
-    }
-
-    @Override
-    public Properties getProperties(final String repositoryName) throws IOException {
-        return null;
-    }
-
-    @Override
-    public long getDirectorySize(final String repositoryName, final String directoryName) throws FileNotFoundException, IOException {
+    public int getFileCount(String directoryPathString) {
         return 0;
     }
-
     @Override
-    public long getFileSize(final String repositoryName, final String directoryName, final String fileName) throws FileNotFoundException, IOException {
+    public long getFileSize(final String filePathString) throws NullPointerException {
         return 0;
     }
-
     @Override
-    public String arrayToString(final String[] array) {
-        return null;
+    public long getDirectorySize(final String directoryPathString) throws NullPointerException {
+        return 0;
+    }
+    @Override
+    public void writeToFile(final String filePathString, final String textToWrite) throws IOException {
+
+    }
+    @Override
+    public void deleteFile(final String filePathString) throws IOException {
+
+    }
+    @Override
+    public void downloadFile(final String filePathString, final boolean overwrite) throws IOException {
+
+    }
+    @Override
+    public void downloadFile(final String filePathString, final String downloadPathString, final boolean overwrite) throws IOException {
+
     }
 
     @Override
-    public void writeToFile(final String repositoryName, final String directoryName, final String fileName, final String textToWrite) throws IOException {
-
-    }
-
-    @Override
-    public void deleteFile(final String repositoryName, final String directoryName, final String fileName) throws IOException {
-
-    }
-
-    @Override
-    public void downloadFile(final String repositoryName, final String directoryName, final String fileName, boolean overwrite) throws IOException {
-        /*if (file.getDownloadUrl() != null && file.getDownloadUrl().length() > 0) {
-            try {
-                HttpResponse resp = service.getRequestFactory().buildGetRequest(new GenericUrl(file.getDownloadUrl())).execute();
-                return resp.getContent();
-            } catch (IOException e) {
-                // An error occurred.
-                e.printStackTrace();
-                return null;
-            }
-        } else {
-            // The file doesn't have any content stored on Drive.
-            return null;
-        }*/
-    }
-
-    /*@Override
-    public List<File> getAllFiles(final String directoryName) throws IOException {
+    public List<File> getFileListInDirectory(final String directoryPathString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories) throws IOException {
         List<File> fileList = new ArrayList<>();
-        FileList result = googleDriveClient.files().list().setQ(String.format("'%s' in parents and trashed = false", directoryName)).setFields("nextPageToken, files(id, name, parents, mimeType)").execute();
-        List<File> files = result.getFiles();
-        if (files == null || files.isEmpty()) {
-            System.out.println("No files found.");
-        }
-        else {
-            for (File file : files) {
-                fileList.add(file);
-                if(file.getMimeType().equals("application/vnd.google-apps.folder")){
-                    getAllFiles(file.getId());
+        //TODO possible sqtQ root in folder!!!!
+        if(directoryPathString.equals("")){
+            FileList result = googleDriveClient.files().list().setFields("nextPageToken, files(id, name, parents, mimeType)").execute();
+            List<File> files = result.getFiles();
+            if (files == null || files.isEmpty()) {
+                System.out.println("No files found.");
+            }
+            else {
+                for (File file : files) {
+                    fileList.add(file);
                 }
             }
         }
         return fileList;
-    }*/
-
-    /*@Override
-    public List<File> getFileListForRepository(final String repositoryName) throws IOException {
-        List<File> allFilesForRepository = new ArrayList<>();
-        for(File repository : fileListInRoot){
-            if(repository.getName().equals(repositoryName)){
-                allFilesForRepository = getAllFiles(repository.getId());
-                return allFilesForRepository;
-            }
-        }
-        return allFilesForRepository;
-    }*/
-
-    @Override
-    public void downloadFile(final String repositoryName, final String directoryName, final String fileName, final String downloadPathString, boolean overwrite) throws IOException {
-
-    }
-
-    @Override
-    public void moveOrRenameFile(final String repositoryName, final String directoryName, final String fileName, final String newName) throws IOException {
-
-    }
-
-    @Override
-    public int getFileCount(final String repositoryName, final String directoryName) {
-        return 0;
-    }
-
-    @Override
-    public List<File> getAllFilesList() throws IOException {
-        List<File> fileList = new ArrayList<>();
-        //TODO possible sqtQ root in folder!!!!
-        FileList result = googleDriveClient.files().list().setFields("nextPageToken, files(id, name, parents, mimeType)").execute();
-        List<File> files = result.getFiles();
-        if (files == null || files.isEmpty()) {
-            System.out.println("No files found.");
-        }
-        else {
-            for (File file : files) {
-                fileList.add(file);
-            }
-        }
-        return fileList;
     }
     @Override
-    public List<File> getFileListInDirectory(final String directoryName) throws IOException {
-        List<File> fileList = new ArrayList<>();
-        FileList result = googleDriveClient.files().list().setQ(String.format("'%s' in parents and trashed = false", directoryName)).setFields("nextPageToken, files(id, name, parents, mimeType)").execute();
-        List<File> files = result.getFiles();
-        if (files == null || files.isEmpty()) {
-            System.out.println("No files found.");
-        }
-        else {
-            for (File file : files) {
-                fileList.add(file);
-
-            }
-        }
-        return fileList;
-    }
-    @Override
-    public List<File> getFilesForSearchName(final String repositoryName, final String directoryName, final String search) {
+    public List<File> getFilesForSearchName(final String directoryPathString, final String search, final boolean recursive, final boolean includeFiles, final boolean includeDirectories) throws IOException {
         return null;
     }
+
     @Override
-    public List<File> getFilesForSearchNameAndExtensions(final String repositoryName, final String directoryName, final String search, final String[] searchExtensions) {
+    public List<File> getFilesForSearchNameAndExtensions(final String directoryPathString, final String search, final String searchExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories) throws IOException {
         return null;
     }
+
     @Override
-    public List<File> getFilesForSearchNameAndExcludedExtensions(final String repositoryName, final String directoryName, final String search, final String[] searchExcludedExtensions) {
+    public List<File> getFilesForSearchNameAndExcludedExtensions(final String directoryPathString, final String search, final String searchExcludedExtensionsString, final boolean recursive,final  boolean includeFiles, final boolean includeDirectories) throws IOException {
         return null;
     }
+
     @Override
-    public List<File> getFilesForSearchNameAndExtensionsAndExcludedExtensions(final String repositoryName, final String directoryName, final String search, final String[] searchExtensions, final String[] searchExcludedExtensions) {
+    public List<File> getFilesForSearchNameAndExtensionsAndExcludedExtensions(final String directoryPathString, final String search, final String searchExtensionsString, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories) throws IOException {
         return null;
     }
+
     @Override
-    public List<File> getFilesForExtensions(final String repositoryName, final String directoryName, final String[] searchExtensions) {
+    public List<File> getFilesForExtensions(final String directoryPathString, final String searchExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories) throws IOException {
         return null;
     }
+
     @Override
-    public List<File> getFilesForExcludedExtensions(final String repositoryName, final String directoryName, final String[] searchExcludedExtensions) {
+    public List<File> getFilesForExcludedExtensions(final String directoryPathString, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories) throws IOException {
         return null;
     }
+
     @Override
-    public List<File> getFilesForExtensionsAndExcludedExtensions(final String repositoryName, final String directoryName, final String[] searchExtensions, final String[] searchExcludedExtensions) {
+    public List<File> getFilesForExtensionsAndExcludedExtensions(final String directoryPathString, final String searchExtensionsString, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories) throws IOException {
+        return null;
+    }
+
+    @Override
+    public List<File> getFilesWithName(final String directoryPathString, final String search, final boolean recursive, final boolean includeFiles, final boolean includeDirectories) throws IOException {
         return null;
     }
 }
