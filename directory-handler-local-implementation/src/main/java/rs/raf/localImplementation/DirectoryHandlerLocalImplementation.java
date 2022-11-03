@@ -7,6 +7,7 @@ import org.apache.commons.io.filefilter.FileFileFilter;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import rs.raf.model.DirectoryHandlerConfig;
+import rs.raf.model.DirectoryWithMaxFileCount;
 import rs.raf.model.LocalFile;
 import rs.raf.specification.IDirectoryHandlerSpecification;
 
@@ -14,9 +15,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpecification<LocalFile> {
 
@@ -25,23 +24,11 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
     //private static final String workingDirectory = System.getProperty("user.dir") + "\\directory-handler-project";
     private static Path workingDirectory = Paths.get("directory-handler-project");
     private static Path homeDirectory = Paths.get(System.getProperty("user.home"));
-    private static String defaultRepositoryName = "defaultRepository";
-    private static String defaultDirectoryName = "defaultDirectory";
-    private static String defaultFileName = "defaultFile";
-    private static String propertiesFileName = "config";
-    private static String propertiesFileExtension = "properties";
-    @Override
-    public Object getCredentials(final InputStream inputStream, final String CREDENTIALS_FILE_PATH, final Object HTTP_TRANSPORT, final Object JSON_FACTORY, final List SCOPES, final String TOKENS_DIRECTORY_PATH) throws UnsupportedOperationException, FileNotFoundException {
-        throw new UnsupportedOperationException();
-    }
-    @Override
-    public void authorizeGoogleDriveClient() throws IOException, GeneralSecurityException {
-        throw new UnsupportedOperationException();
-    }
+
     @Override
     public void createRepository(final String repositoryName) throws IOException, FileAlreadyExistsException {
         Files.createDirectory(workingDirectory.resolve(repositoryName));
-        createDefaultConfig(repositoryName);
+        createConfig(repositoryName, new DirectoryHandlerConfig());
     }
     @Override
     public void createRepository(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException, FileAlreadyExistsException{
@@ -58,21 +45,43 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         return filePath.toFile().createNewFile();
     }
     @Override
-    public void createDefaultConfig(final String repositoryName) throws IOException {
-        createFile(repositoryName + "/config.properties");
-        updateConfig(repositoryName, new DirectoryHandlerConfig());
-    }
-    @Override
     public void createConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException {
         createFile(repositoryName + "/config.properties");
-        updateConfig(repositoryName, directoryHandlerConfig);
-    }
-    @Override
-    public void updateConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException {
         Properties properties = getProperties(repositoryName);
         properties.setProperty("maxRepositorySize", directoryHandlerConfig.getMaxRepositorySize());
-        properties.setProperty("maxFileCount", Integer.toString(directoryHandlerConfig.getMaxFileCount()));
         properties.setProperty("excludedExtensions", directoryHandlerConfig.getExcludedExtensionsString());
+        OutputStream outputStream = new FileOutputStream(workingDirectory.resolve(repositoryName).resolve("config.properties").toAbsolutePath().toString());
+        properties.store(outputStream, "updatedConfig");
+    }
+    @Override
+    public void updateConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig, final String directoriesWithMaxFileCountString) throws IOException {
+        Properties properties = getProperties(repositoryName);
+        if(directoryHandlerConfig == null && directoriesWithMaxFileCountString == null){
+            System.out.println("Config not updated");
+            return;
+        }
+        if(directoryHandlerConfig != null && directoriesWithMaxFileCountString == null){
+            properties.setProperty("maxRepositorySize", directoryHandlerConfig.getMaxRepositorySize());
+            properties.setProperty("excludedExtensions", directoryHandlerConfig.getExcludedExtensionsString());
+        }
+        if(directoryHandlerConfig == null && directoriesWithMaxFileCountString != null){
+            List<String> directoriesWithMaxFileCount = List.of(directoriesWithMaxFileCountString.split(","));
+            for(String directoryWithMaxFileCount : directoriesWithMaxFileCount){
+                String directory = directoryWithMaxFileCount.substring(0, directoryWithMaxFileCount.indexOf("-"));
+                String maxFileCount = directoryWithMaxFileCount.substring(directoryWithMaxFileCount.indexOf("-"));
+                properties.setProperty(directory, maxFileCount);
+            }
+        }
+        if(directoryHandlerConfig != null && directoriesWithMaxFileCountString != null){
+            properties.setProperty("maxRepositorySize", directoryHandlerConfig.getMaxRepositorySize());
+            properties.setProperty("excludedExtensions", directoryHandlerConfig.getExcludedExtensionsString());
+            List<String> directoriesWithMaxFileCount = List.of(directoriesWithMaxFileCountString.split(","));
+            for(String directoryWithMaxFileCount : directoriesWithMaxFileCount){
+                String directory = directoryWithMaxFileCount.substring(0, directoryWithMaxFileCount.indexOf("-"));
+                String maxFileCount = directoryWithMaxFileCount.substring(directoryWithMaxFileCount.indexOf("-"));
+                properties.setProperty(directory, maxFileCount);
+            }
+        }
         OutputStream outputStream = new FileOutputStream(workingDirectory.resolve(repositoryName).resolve("config.properties").toAbsolutePath().toString());
         properties.store(outputStream, "updatedConfig");
     }
@@ -120,32 +129,19 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         workingDirectory.resolve(Paths.get(filePathString)).toFile().delete();
     }
     @Override
-    public void downloadFile(final String filePathString, final boolean overwrite) throws IOException {
-        String fileName = String.valueOf(Paths.get(filePathString).getFileName());
-        Path originalPath = workingDirectory.resolve(Paths.get(filePathString));
-        Path downloadPath = workingDirectory.resolve("Downloads");
-        if (overwrite) {
-            Files.copy(originalPath, downloadPath.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
-        }
-        else {
-            String suffix = "";
-            int i = 1;
-            while(true){
-                try{
-                    Files.copy(originalPath, downloadPath.resolve(fileName.substring(0, fileName.indexOf(".")) + suffix + fileName.substring(fileName.indexOf("."))));
-                    break;
-                }
-                catch(FileAlreadyExistsException e){
-                    suffix += i;
-                }
+    public void downloadFile(final String filePathString, final String downloadAbsolutePathString, final boolean overwrite) throws IOException {
+        Path downloadPath;
+        if(downloadAbsolutePathString == null){
+            downloadPath = workingDirectory.resolve("Downloads");
+            if(!Files.exists(downloadPath)){
+                downloadPath.toFile().mkdir();
             }
         }
-    }
-    @Override
-    public void downloadFile(final String filePathString, final String downloadPathString, final boolean overwrite) throws IOException {
+        else{
+            downloadPath = Paths.get(downloadAbsolutePathString);
+        }
         String fileName = String.valueOf(Paths.get(filePathString).getFileName());
         Path originalPath = workingDirectory.resolve(Paths.get(filePathString));
-        Path downloadPath = Paths.get(downloadPathString);
         if (overwrite) {
             Files.copy(originalPath, downloadPath.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
         }
@@ -340,13 +336,4 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         return foundFiles;
     }
 
-    @Override
-    public String getFileIdByName(final String fileName) throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getFileIdByNameInRepository(List<LocalFile> fileListInRepository, String fileName) throws IOException {
-        return null;
-    }
 }

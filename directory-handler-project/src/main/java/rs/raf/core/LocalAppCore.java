@@ -64,9 +64,10 @@ public class LocalAppCore {
 		else if(initialSelection.equals("2")){
 			System.out.println("selected a repository");
 		}*/
-		List<LocalFile> fileListInDirectory = directoryHandlerLocalImplementation.getFilesForExtensions("GeRuMap", "java", true, true, false);
+		/*List<LocalFile> fileListInDirectory = directoryHandlerLocalImplementation.getFilesForExtensions("GeRuMap", "java", true, true, false);
 		for(LocalFile file : fileListInDirectory){
 			System.out.println(file.getFile().getName() + " : " + file.getFileMetadata().creationTime());
-		}
+		}*/
+		directoryHandlerLocalImplementation.downloadFile("testRep", "C:\\Users\\bojan\\Downloads", true);
 	}
 }

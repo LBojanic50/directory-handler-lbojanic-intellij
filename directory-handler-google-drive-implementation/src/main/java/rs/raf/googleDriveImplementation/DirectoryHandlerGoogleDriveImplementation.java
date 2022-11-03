@@ -42,16 +42,16 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     public DirectoryHandlerGoogleDriveImplementation() throws GeneralSecurityException, IOException {
         authorizeGoogleDriveClient();
     }
-    @Override
-    public void authorizeGoogleDriveClient() throws IOException, GeneralSecurityException {
+
+    protected void authorizeGoogleDriveClient() throws IOException, GeneralSecurityException {
         InputStream credentialsInputStream = new FileInputStream(CREDENTIALS_FILE_PATH);
         HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         Credential credentials = (Credential) getCredentials(credentialsInputStream, CREDENTIALS_FILE_PATH, HTTP_TRANSPORT, JSON_FACTORY, SCOPES, TOKENS_DIRECTORY_PATH);
         googleDriveClient = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, credentials).setApplicationName(APPLICATION_NAME).build();
         allFilesList = getFileListInDirectory("", true, true, true);
     }
-    @Override
-    public Object getCredentials(final InputStream inputStream, final String CREDENTIALS_FILE_PATH, final Object HTTP_TRANSPORT, final Object JSON_FACTORY, final List SCOPES, final String TOKENS_DIRECTORY_PATH) throws IOException {
+
+    protected Object getCredentials(final InputStream inputStream, final String CREDENTIALS_FILE_PATH, final Object HTTP_TRANSPORT, final Object JSON_FACTORY, final List SCOPES, final String TOKENS_DIRECTORY_PATH) throws IOException {
         if (inputStream == null) {
             throw new FileNotFoundException("Resource not found: " + CREDENTIALS_FILE_PATH);
         }
@@ -62,12 +62,12 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         Credential credential = new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
         return credential;
     }
-    @Override
-    public String getFileIdByName(String fileName) throws IOException {
+
+    protected String getFileIdByName(final String fileName) throws IOException {
         return null;
     }
-    @Override
-    public String getFileIdByNameInRepository(List<File> fileListInRepository, String fileName) throws IOException {
+
+    protected String getFileIdByNameInRepository(final List<File> fileListInRepository, final String fileName) throws IOException {
         return null;
     }
     @Override
@@ -84,7 +84,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             System.err.println("Unable to create folder: " + e.getDetails());
             throw e;
         }
-        createDefaultConfig(repositoryName);
+        createConfig(repositoryName, new DirectoryHandlerConfig());
     }
     @Override
     public void createRepository(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException {
@@ -112,17 +112,15 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         return false;
     }
     @Override
-    public void createDefaultConfig(final String repositoryName) throws IOException, FileAlreadyExistsException {
-
-    }
-    @Override
     public void createConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException, FileAlreadyExistsException {
 
     }
+
     @Override
-    public void updateConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException, FileAlreadyExistsException {
+    public void updateConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig, final String directoriesWithMaxFileCountString) throws IOException {
 
     }
+
     @Override
     public Properties getProperties(final String repositoryName) throws IOException {
         return null;
@@ -150,7 +148,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         }
     }
     @Override
-    public int getFileCount(String directoryPathString) {
+    public int getFileCount(final String directoryPathString) {
         return 0;
     }
     @Override
@@ -167,10 +165,6 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     }
     @Override
     public void deleteFile(final String filePathString) throws IOException {
-
-    }
-    @Override
-    public void downloadFile(final String filePathString, final boolean overwrite) throws IOException {
 
     }
     @Override

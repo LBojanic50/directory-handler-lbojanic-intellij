@@ -13,13 +13,6 @@ import java.util.List;
 import java.util.Properties;
 
 public interface IDirectoryHandlerSpecification<T> {
-    void authorizeGoogleDriveClient() throws IOException, GeneralSecurityException;
-    /**
-     *
-     */
-    Object getCredentials(final InputStream inputStream, final String CREDENTIALS_FILE_PATH, final Object HTTP_TRANSPORT, final Object JSON_FACTORY, final List<String> SCOPES, final String TOKENS_DIRECTORY_PATH) throws UnsupportedOperationException, IOException;
-    String getFileIdByName(final String fileName) throws IOException;
-    String getFileIdByNameInRepository(final List<T> fileListInRepository, final String fileName) throws IOException;
     /**
      * Creates a repository with the specified name and default config
      *
@@ -47,7 +40,12 @@ public interface IDirectoryHandlerSpecification<T> {
      * @param filePathString slash delimited string representation of the file path to the file to create (/, \, \\)
      */
     boolean createFile(final String filePathString) throws Exception, FileAlreadyExistsException;
-    void createDefaultConfig(final String repositoryName) throws IOException, FileAlreadyExistsException;
+    /**
+     * Creates a specified config in the specified repository
+     * @param repositoryName name of the repository to create the config in
+     * @param directoryHandlerConfig config to create (parse new DirectoryHandlerConfig() to create the default config with
+     *                               maxRepositorySize = 1073741824 (Bytes)
+     *                               excludedExtensions = "")*/
     void createConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException, FileAlreadyExistsException;
     /**
      * Updates the config of specified repository with the specified config
@@ -56,7 +54,7 @@ public interface IDirectoryHandlerSpecification<T> {
      * @param directoryHandlerConfig custom config
      * @throws IOException
      */
-    void updateConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException, FileAlreadyExistsException;
+    void updateConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig, final String directoriesWithMaxFileCountString) throws IOException;
     /**
      * Gets the Properties Object from the specified repository
      * @param repositoryName name of the repository to get the properties from
@@ -77,8 +75,7 @@ public interface IDirectoryHandlerSpecification<T> {
     long getDirectorySize(final String directoryPathString) throws NullPointerException;
     void writeToFile(final String filePathString, final String textToWrite) throws IOException;
     void deleteFile(final String filePathString) throws IOException;
-    void downloadFile(final String filePathString, final boolean overwrite) throws IOException;
-    void downloadFile(final String filePathString, final String downloadPathString, final boolean overwrite) throws IOException;
+    void downloadFile(final String filePathString, final String downloadAbsolutePathString, final boolean overwrite) throws IOException;
     void moveOrRenameFile(final String oldPathString, final String newPathString) throws IOException;
 
     List<T> getFileListInDirectory(final String directoryPathString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories) throws IOException;
