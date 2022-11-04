@@ -1,6 +1,7 @@
 package rs.raf.specification;
 
 import rs.raf.model.DirectoryHandlerConfig;
+import rs.raf.model.SortingType;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,10 +10,12 @@ import java.nio.file.FileAlreadyExistsException;
 
 import java.security.GeneralSecurityException;
 
+import java.text.ParseException;
 import java.util.List;
 import java.util.Properties;
 
 public interface IDirectoryHandlerSpecification<T> {
+
     /**
      * Creates a repository with the specified name and default config
      *
@@ -59,7 +62,7 @@ public interface IDirectoryHandlerSpecification<T> {
      * Gets the Properties Object from the specified repository
      * @param repositoryName name of the repository to get the properties from
      * @return Properties Object from the specified repository*/
-    Properties getProperties(final String repositoryName) throws IOException;
+    Properties getConfig(final String repositoryName) throws IOException;
     int getFileCount(final String directoryPathString);
     /**
      * Gets the size of a file at the specified slash delimited string representation of the file path to the file of which to get the size of (/, \, \\)
@@ -79,12 +82,15 @@ public interface IDirectoryHandlerSpecification<T> {
     void moveOrRenameFile(final String oldPathString, final String newPathString) throws IOException;
 
     List<T> getFileListInDirectory(final String directoryPathString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories) throws IOException;
-    List<T> getFilesForSearchName(final String directoryPathString, final String search, final boolean recursive, final boolean includeFiles, final boolean includeDirectories) throws IOException;
-    List<T> getFilesForSearchNameAndExtensions(final String directoryPathString, final String search, final String searchExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories) throws IOException;
-    List<T> getFilesForSearchNameAndExcludedExtensions(final String directoryPathString, final String search, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories) throws IOException;
-    List<T> getFilesForSearchNameAndExtensionsAndExcludedExtensions(final String directoryPathString, final String search, final String searchExtensionsString, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories) throws IOException;
-    List<T> getFilesForExtensions(final String directoryPathString, final String searchExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories) throws IOException;
-    List<T> getFilesForExcludedExtensions(final String directoryPathString, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories) throws IOException;
-    List<T> getFilesForExtensionsAndExcludedExtensions(final String directoryPathString, final String searchExtensionsString, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories) throws IOException;
-    List<T> getFilesWithName(final String directoryPathString, final String search, final boolean recursive, final boolean includeFiles, final boolean includeDirectories) throws IOException;
+    List<T> getAllFiles(final String directoryPathString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException;
+    List<T> getFilesForSearchName(final String directoryPathString, final String search, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException;
+    List<T> getFilesForSearchNameAndExtensions(final String directoryPathString, final String search, final String searchExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException;
+    List<T> getFilesForSearchNameAndExcludedExtensions(final String directoryPathString, final String search, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException;
+    List<T> getFilesForSearchNameAndExtensionsAndExcludedExtensions(final String directoryPathString, final String search, final String searchExtensionsString, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException;
+    List<T> getFilesForExtensions(final String directoryPathString, final String searchExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException;
+    List<T> getFilesForExcludedExtensions(final String directoryPathString, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException;
+    List<T> getFilesForExtensionsAndExcludedExtensions(final String directoryPathString, final String searchExtensionsString, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException;
+    List<T> getFilesWithName(final String directoryPathString, final String search, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException;
+    List<T> getFilesForDateRange(final String directoryPathString, final String startDate, final String endDate, final boolean dateCreated, final boolean dateModified, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException, ParseException;
+    String getParentDirectoryForFile(final String directoryPathString, final String fileName) throws IOException;
 }

@@ -1,15 +1,19 @@
 package rs.raf.core;
-
-import org.apache.commons.io.FileUtils;
+/*
 import rs.raf.localImplementation.DirectoryHandlerLocalImplementation;
 import rs.raf.model.DirectoryHandlerConfig;
 import rs.raf.model.DirectoryHandlerFile;
+import rs.raf.model.LocalFile;*/
+
+import rs.raf.localImplementation.DirectoryHandlerLocalImplementation;
 import rs.raf.model.LocalFile;
+import rs.raf.model.SortingType;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.ParseException;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
@@ -17,14 +21,14 @@ import java.util.Random;
 public class LocalAppCore {
 	private static Properties properties;
 	private static long folderSize = 0;
-	private static DirectoryHandlerLocalImplementation directoryHandlerLocalImplementation = null;
+	//private static DirectoryHandlerLocalImplementation directoryHandlerLocalImplementation = null;
 	private static String[] extensions = new String[] {"txt", "json", "xml"};
 	private static Random randomExtensionIndex = new Random();
 	private static BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 	public LocalAppCore() throws IOException {
-		directoryHandlerLocalImplementation = new DirectoryHandlerLocalImplementation();
+		//directoryHandlerLocalImplementation = new DirectoryHandlerLocalImplementation();
 	}
-	public void startApp() throws IOException {
+	public void startApp() throws IOException, ParseException {
 		/*String initialSelection;
 		String repositoryName;
 		String configType;
@@ -68,6 +72,10 @@ public class LocalAppCore {
 		for(LocalFile file : fileListInDirectory){
 			System.out.println(file.getFile().getName() + " : " + file.getFileMetadata().creationTime());
 		}*/
-		directoryHandlerLocalImplementation.downloadFile("testRep", "C:\\Users\\bojan\\Downloads", true);
+		//directoryHandlerLocalImplementation.downloadFile("testRep", "C:\\Users\\bojan\\Downloads", true);
+		List<LocalFile> fileList = DirectoryHandlerLocalImplementation.getInstance().getFilesForDateRange(null, "01/10/2022", "06/11/2022", true, true, true, true, true, SortingType.DATE_CREATED);
+		for(LocalFile file : fileList){
+			System.out.println(file.getFile().getName() + ":" + file.getFileMetadata().creationTime());
+		}
 	}
 }
