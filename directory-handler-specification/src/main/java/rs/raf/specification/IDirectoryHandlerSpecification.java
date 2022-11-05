@@ -1,14 +1,15 @@
 package rs.raf.specification;
 
+import rs.raf.exception.DirectoryHandlerExceptions;
 import rs.raf.model.DirectoryHandlerConfig;
 import rs.raf.model.SortingType;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 
 import java.nio.file.FileAlreadyExistsException;
 
-import java.security.GeneralSecurityException;
+import java.nio.file.Path;
 
 import java.text.ParseException;
 import java.util.List;
@@ -16,13 +17,14 @@ import java.util.Properties;
 
 public interface IDirectoryHandlerSpecification<T> {
 
+    String getFileIdByName(final String filePathString) throws IOException;
     /**
      * Creates a repository with the specified name and default config
      *
      * @param repositoryName name of the repository to create
      * @throws IOException
      */
-    void createRepository(final String repositoryName) throws IOException, FileAlreadyExistsException;
+    void createRepository(final String repositoryName) throws IOException, FileAlreadyExistsException, DirectoryHandlerExceptions.MaxFileCountExceededException;
     /**
      * Creates a repository with the specified name and custom config
      *
@@ -30,13 +32,13 @@ public interface IDirectoryHandlerSpecification<T> {
      * @param directoryHandlerConfig custom config
      * @throws IOException
      */
-    void createRepository(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException, FileAlreadyExistsException;
+    void createRepository(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException, FileAlreadyExistsException, DirectoryHandlerExceptions.MaxFileCountExceededException;
     /**
      * Creates a directory at the specified slash delimited string representation of the directory path to the directory to create (/, \, \\)
      *
      * @param directoryPathString slash delimited string representation of the directory path to the directory to create (/, \, \\)
      */
-    void createDirectory(final String directoryPathString) throws IOException, FileAlreadyExistsException;
+    void createDirectory(final String directoryPathString) throws IOException, FileAlreadyExistsException, DirectoryHandlerExceptions.MaxFileCountExceededException;
     /**
      * Creates a file at the specified slash delimited string representation of the file path to the file to create (/, \, \\)
      *
@@ -49,7 +51,7 @@ public interface IDirectoryHandlerSpecification<T> {
      * @param directoryHandlerConfig config to create (parse new DirectoryHandlerConfig() to create the default config with
      *                               maxRepositorySize = 1073741824 (Bytes)
      *                               excludedExtensions = "")*/
-    void createConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException, FileAlreadyExistsException;
+    void createConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException, FileAlreadyExistsException, DirectoryHandlerExceptions.MaxFileCountExceededException;
     /**
      * Updates the config of specified repository with the specified config
      *
@@ -92,5 +94,7 @@ public interface IDirectoryHandlerSpecification<T> {
     List<T> getFilesForExtensionsAndExcludedExtensions(final String directoryPathString, final String searchExtensionsString, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException;
     List<T> getFilesWithName(final String directoryPathString, final String search, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException;
     List<T> getFilesForDateRange(final String directoryPathString, final String startDate, final String endDate, final boolean dateCreated, final boolean dateModified, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException, ParseException;
+    void printList(final List<T> list) throws IOException;
     String getParentDirectoryForFile(final String directoryPathString, final String fileName) throws IOException;
+    Path getWorkingDirectory();
 }

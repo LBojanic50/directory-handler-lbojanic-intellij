@@ -1,12 +1,13 @@
 package rs.raf.localImplementation;
 
 import org.apache.commons.io.FileUtils;
-
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
+import rs.raf.exception.DirectoryHandlerExceptions;
 import rs.raf.model.DirectoryHandlerConfig;
 import rs.raf.model.LocalFile;
 import rs.raf.model.SortingType;
+import rs.raf.specification.DirectoryHandlerManager;
 import rs.raf.specification.IDirectoryHandlerSpecification;
 import rs.raf.util.Comparators;
 
@@ -15,26 +16,50 @@ import java.nio.file.*;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Properties;
 
+import static rs.raf.exception.DirectoryHandlerExceptions.MaxFileCountExceededException;
 public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpecification<LocalFile> {
 
     //private static final String workingDirectory = System.getProperty("user.dir") + "\\directory-handler-project";
     //private static final String workingDirectory = "D:\\JavaProjects\\directory-handler-lbojanic-intellij\\directory-handler-project";
     //private static final String workingDirectory = System.getProperty("user.dir") + "\\directory-handler-project";
-    private static Path workingDirectory = Paths.get("directory-handler-project");
-    private static Path homeDirectory = Paths.get(System.getProperty("user.home"));
-    /*protected String fileName;
-    public void setFileName(final String fileName){
-        this.fileName = fileName;
-    }
-    static {
-        DirectoryHandlerManager.registerDirectoryHandlerLocalImplementation(new DirectoryHandlerLocalImplementation());
+    //private static Path homeDirectory = Paths.get(System.getProperty("user.home"));
+    //private static Path workingDirectory = Paths.get("directory-handler-project");
+    private static final Path workingDirectory = Paths.get(System.getProperty("user.dir")).resolve("directory-handler-project");
+    static{
+        //workingDirectory = Paths.get(System.getProperty("user.dir")).resolve("DirectoryHandlerRoot");
+        if(!Files.exists(workingDirectory)){
+            workingDirectory.toFile().mkdir();
+        }
     }
 
-    public DirectoryHandlerLocalImplementation() {
+    @Override
+    public String getFileIdByName(String filePathString) throws IOException {
+        return null;
+    }
+
+    @Override
+    public Path getWorkingDirectory(){
+        return workingDirectory;
+    }
+    static{
+        DirectoryHandlerManager.registerDirectoryHandler(DirectoryHandlerLocalImplementation.getInstance());
+    }
+    public DirectoryHandlerLocalImplementation(){
         super();
-    }*/
+    }
+
+    @Override
+    public void printList(final List<LocalFile> list) throws IOException {
+        for(LocalFile file : list){
+            System.out.println(file.getFile().getName());
+        }
+    }
+
     private static DirectoryHandlerLocalImplementation instance;
     public static DirectoryHandlerLocalImplementation getInstance(){
         if(instance == null){
@@ -43,26 +68,36 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         return instance;
     }
     @Override
-    public void createRepository(final String repositoryName) throws IOException, FileAlreadyExistsException {
+    public void createRepository(final String repositoryName) throws IOException, FileAlreadyExistsException, MaxFileCountExceededException {
         Files.createDirectory(workingDirectory.resolve(repositoryName));
         createConfig(repositoryName, new DirectoryHandlerConfig());
     }
     @Override
-    public void createRepository(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException, FileAlreadyExistsException{
+    public void createRepository(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException, FileAlreadyExistsException, MaxFileCountExceededException {
         Files.createDirectory(workingDirectory.resolve(repositoryName));
         createConfig(repositoryName, directoryHandlerConfig);
     }
     @Override
-    public void createDirectory(final String directoryPathString) throws IOException, FileAlreadyExistsException {
+    public void createDirectory(final String directoryPathString) throws IOException, FileAlreadyExistsException, DirectoryHandlerExceptions.MaxFileCountExceededException {
+        String parentDirectoryPathString = directoryPathString.substring(0, directoryPathString.lastIndexOf("/"));
+        Properties properties = getConfig(directoryPathString);
+        if(getFileCount(parentDirectoryPathString) + 1 > Integer.valueOf(properties.getProperty(parentDirectoryPathString))){
+            throw new MaxFileCountExceededException(parentDirectoryPathString);
+        }
         Files.createDirectories(workingDirectory.resolve(Paths.get(directoryPathString)));
     }
     @Override
-    public boolean createFile(final String filePathString) throws IOException {
+    public boolean createFile(final String filePathString) throws IOException, MaxFileCountExceededException {
+        String parentDirectoryPathString = filePathString.substring(0, filePathString.lastIndexOf("/"));
+        Properties properties = getConfig(filePathString);
+        if(getFileCount(parentDirectoryPathString) + 1 > Integer.valueOf(properties.getProperty(parentDirectoryPathString))){
+            throw new MaxFileCountExceededException(parentDirectoryPathString);
+        }
         Path filePath = workingDirectory.resolve(Paths.get(filePathString));
         return filePath.toFile().createNewFile();
     }
     @Override
-    public void createConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException {
+    public void createConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException, MaxFileCountExceededException {
         createFile(repositoryName + "/config.properties");
         Properties properties = getConfig(repositoryName);
         properties.setProperty("maxRepositorySize", directoryHandlerConfig.getMaxRepositorySize());
@@ -397,11 +432,11 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
     }
 
     @Override
-    public String getParentDirectoryForFile(String directoryPathString, String fileName) throws IOException {
+    public String getParentDirectoryForFile(final String directoryPathString, final String fileName) throws IOException {
         return null;
     }
 
-    protected List<LocalFile> sortList(List<LocalFile> listToSort, SortingType sortingType){
+    protected List<LocalFile> sortList(List<LocalFile> listToSort, final SortingType sortingType){
         if(sortingType == SortingType.NAME){
             listToSort.sort(new Comparators.NameComparator());
         }
