@@ -28,7 +28,7 @@ public class Main {
 			}
 		}
 		IDirectoryHandlerSpecification directoryHandler = DirectoryHandlerManager.getDirectoryHandler();
-		while(true){
+		/*while(true){
 			String command = reader.readLine();
 			if(command.startsWith("createRepository")){
 				String repositoryName = command.split(" ")[1];
@@ -53,6 +53,7 @@ public class Main {
 			if(command.equals("exit")){
 				System.exit(0);
 			}
-		}
+		}*/
+		System.out.println(directoryHandler.getFileCount("customRep"));
 	}
 }

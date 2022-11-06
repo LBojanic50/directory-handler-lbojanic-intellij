@@ -77,7 +77,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     @Override
     public void printFileList(final List<File> list) throws IOException {
         for(File file : list){
-            System.out.println(file.getName() + " : " + file.getId());
+            System.out.println(file.getName() + " : " + file.getId() + " : " + file.getSize());
         }
     }
 
@@ -258,7 +258,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             File file = googleDriveClient
                     .files()
                     .create(fileMetadata, mediaContent)
-                    .setFields("id, name, parents, mimeType")
+                    .setFields("id, name, size, parents, mimeType")
                     .execute();
         }
         catch (GoogleJsonResponseException e) {
@@ -281,7 +281,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     @Override
     public void moveOrRenameFile(final String oldPathString, final String newPathString) throws IOException {
         File file = googleDriveClient.files().get(oldPathString)
-                .setFields("id, name, parents, mimeType")
+                .setFields("id, name, size, parents, mimeType")
                 .execute();
         StringBuilder previousParents = new StringBuilder();
         for (String parent : file.getParents()) {
@@ -292,7 +292,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             file = googleDriveClient.files().update(oldPathString, null)
                     .setAddParents(newPathString)
                     .setRemoveParents(previousParents.toString())
-                    .setFields("id, name, parents, mimeType")
+                    .setFields("id, name, size, parents, mimeType")
                     .execute();
         } catch (GoogleJsonResponseException e) {
             System.err.println("Unable to move file: " + e.getDetails());
@@ -313,8 +313,12 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     }
     @Override
     public long getFileSize(final String filePathString) throws NullPointerException, IOException {
-        File file = googleDriveClient.files().get(getFileIdByPath(filePathString)).setFields("files(id, name, parents, mimeType)").execute();
-        return file.getSize();
+        long fileSize = 0;
+        String fileName = filePathString.substring(filePathString.lastIndexOf("/") + 1);
+        downloadFile(filePathString, "temp", true);
+        fileSize = FileUtils.sizeOf(workingDirectory.resolve(Paths.get("temp")).resolve(fileName).toFile());
+        workingDirectory.resolve(Paths.get("temp")).resolve(fileName).toFile().delete();
+        return fileSize;
     }
     @Override
     public long getDirectorySize(final String directoryPathString) throws NullPointerException, IOException {
@@ -327,7 +331,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             }
         }
         else{
-            FileList result = googleDriveClient.files().list().setQ(String.format("'%s' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false", getFileIdByPath(directoryPathString))).setFields("files(id, name, parents, mimeType)").setSpaces("drive").execute();
+            FileList result = googleDriveClient.files().list().setQ(String.format("'%s' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false", getFileIdByPath(directoryPathString))).setFields("files(id, name, size, parents, mimeType)").setSpaces("drive").execute();
             List<File> files = result.getFiles();
             if(files != null && !files.isEmpty()){
                 for(File file : files){
@@ -363,7 +367,8 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
                 .get(getFileIdByPath(filePathString))
                 //.get("15jRbciq-HNvY8xzN-hN2lJM2rhCR4c6_")
                 .executeMediaAndDownloadTo(outputStream);
-        java.io.File file = downloadPathParent.toFile();
+        String fileName = filePathString.substring(filePathString.lastIndexOf("/") + 1);
+        java.io.File file = downloadPathParent.resolve(fileName).toFile();
         InputStream inputStream = new ByteArrayInputStream(((ByteArrayOutputStream)outputStream).toByteArray());
         FileUtils.copyInputStreamToFile(inputStream, file);
     }
