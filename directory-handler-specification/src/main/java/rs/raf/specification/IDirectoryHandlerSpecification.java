@@ -4,11 +4,9 @@ import rs.raf.exception.DirectoryHandlerExceptions;
 import rs.raf.model.DirectoryHandlerConfig;
 import rs.raf.model.SortingType;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import java.nio.file.FileAlreadyExistsException;
-
 import java.nio.file.Path;
 
 import java.text.ParseException;
@@ -17,7 +15,7 @@ import java.util.Properties;
 
 public interface IDirectoryHandlerSpecification<T> {
 
-    String getFileIdByName(final String filePathString) throws IOException;
+    String getFileIdByPath(final String filePathString) throws IOException;
     /**
      * Creates a repository with the specified name and default config
      *
@@ -26,7 +24,7 @@ public interface IDirectoryHandlerSpecification<T> {
      */
     void createRepository(final String repositoryName) throws IOException, FileAlreadyExistsException, DirectoryHandlerExceptions.MaxFileCountExceededException;
     /**
-     * Creates a repository with the specified name and custom config
+     * Creates a repository with the specified name and default config ()
      *
      * @param repositoryName         name of the repository to create
      * @param directoryHandlerConfig custom config
@@ -65,19 +63,19 @@ public interface IDirectoryHandlerSpecification<T> {
      * @param repositoryName name of the repository to get the properties from
      * @return Properties Object from the specified repository*/
     Properties getConfig(final String repositoryName) throws IOException;
-    int getFileCount(final String directoryPathString);
+    int getFileCount(final String directoryPathString) throws IOException;
     /**
      * Gets the size of a file at the specified slash delimited string representation of the file path to the file of which to get the size of (/, \, \\)
      * @param filePathString slash delimited string representation of the file path to the file of which to get the size of (/, \, \\)
      * @return long size in bytes
      */
-    long getFileSize(final String filePathString) throws NullPointerException;
+    long getFileSize(final String filePathString) throws NullPointerException, IOException;
     /**
      * Gets the size of a directory at the specified slash delimited string representation of the directory path to the directory of which to get the size of (/, \, \\)
      * @param directoryPathString slash delimited string representation of the directory path to the directory of which to get the size of (/, \, \\)
      * @return long size in bytes
      */
-    long getDirectorySize(final String directoryPathString) throws NullPointerException;
+    long getDirectorySize(final String directoryPathString) throws NullPointerException, IOException;
     void writeToFile(final String filePathString, final String textToWrite) throws IOException;
     void deleteFile(final String filePathString) throws IOException;
     void downloadFile(final String filePathString, final String downloadAbsolutePathString, final boolean overwrite) throws IOException;
@@ -94,7 +92,6 @@ public interface IDirectoryHandlerSpecification<T> {
     List<T> getFilesForExtensionsAndExcludedExtensions(final String directoryPathString, final String searchExtensionsString, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException;
     List<T> getFilesWithName(final String directoryPathString, final String search, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException;
     List<T> getFilesForDateRange(final String directoryPathString, final String startDate, final String endDate, final boolean dateCreated, final boolean dateModified, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException, ParseException;
-    void printList(final List<T> list) throws IOException;
-    String getParentDirectoryForFile(final String directoryPathString, final String fileName) throws IOException;
+    void printFileList(final List<T> list) throws IOException;
     Path getWorkingDirectory();
 }

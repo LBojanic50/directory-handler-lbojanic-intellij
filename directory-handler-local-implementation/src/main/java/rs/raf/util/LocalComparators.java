@@ -9,7 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
 
-public class Comparators {
+public class LocalComparators {
     public static class CreationDateComparator implements Comparator<LocalFile> {
         @Override
         public int compare(LocalFile file1, LocalFile file2) {

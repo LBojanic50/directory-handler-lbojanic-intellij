@@ -9,7 +9,7 @@ import rs.raf.model.LocalFile;
 import rs.raf.model.SortingType;
 import rs.raf.specification.DirectoryHandlerManager;
 import rs.raf.specification.IDirectoryHandlerSpecification;
-import rs.raf.util.Comparators;
+import rs.raf.util.LocalComparators;
 
 import java.io.*;
 import java.nio.file.*;
@@ -38,7 +38,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
     }
 
     @Override
-    public String getFileIdByName(String filePathString) throws IOException {
+    public String getFileIdByPath(String filePathString) throws IOException {
         return null;
     }
 
@@ -54,7 +54,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
     }
 
     @Override
-    public void printList(final List<LocalFile> list) throws IOException {
+    public void printFileList(final List<LocalFile> list) throws IOException {
         for(LocalFile file : list){
             System.out.println(file.getFile().getName());
         }
@@ -63,7 +63,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
     private static DirectoryHandlerLocalImplementation instance;
     public static DirectoryHandlerLocalImplementation getInstance(){
         if(instance == null){
-            return new DirectoryHandlerLocalImplementation();
+            instance = new DirectoryHandlerLocalImplementation();
         }
         return instance;
     }
@@ -431,23 +431,18 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         return sortList(fileList, sortingType);
     }
 
-    @Override
-    public String getParentDirectoryForFile(final String directoryPathString, final String fileName) throws IOException {
-        return null;
-    }
-
     protected List<LocalFile> sortList(List<LocalFile> listToSort, final SortingType sortingType){
         if(sortingType == SortingType.NAME){
-            listToSort.sort(new Comparators.NameComparator());
+            listToSort.sort(new LocalComparators.NameComparator());
         }
         else if(sortingType == SortingType.SIZE){
-            listToSort.sort(new Comparators.SizeComparator());
+            listToSort.sort(new LocalComparators.SizeComparator());
         }
         else if(sortingType == SortingType.DATE_CREATED){
-            listToSort.sort(new Comparators.CreationDateComparator());
+            listToSort.sort(new LocalComparators.CreationDateComparator());
         }
         else if(sortingType == SortingType.DATE_MODIFIED){
-            listToSort.sort(new Comparators.ModificationDateComparator());
+            listToSort.sort(new LocalComparators.ModificationDateComparator());
         }
         else{
             return listToSort;
