@@ -1,5 +1,6 @@
 package rs.raf.main;
 
+import rs.raf.model.DirectoryHandlerConfig;
 import rs.raf.specification.DirectoryHandlerManager;
 import rs.raf.specification.IDirectoryHandlerSpecification;
 
@@ -16,8 +17,6 @@ public class Main {
 			catch (ClassNotFoundException e) {
 				throw new RuntimeException(e);
 			}
-
-
 		}
 		else if(args[0].equals("drive")) {
 			try{
@@ -54,6 +53,6 @@ public class Main {
 				System.exit(0);
 			}
 		}*/
-		System.out.println(directoryHandler.getFileCount("customRep"));
+		directoryHandler.updateConfig("customRep", new DirectoryHandlerConfig("12345", "exe,bat"), "testDir1-20,testDir2-30");
 	}
 }

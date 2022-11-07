@@ -60,7 +60,8 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     public DirectoryHandlerGoogleDriveImplementation() throws GeneralSecurityException, IOException {
         super();
         authorizeGoogleDriveClient();
-        allFilesList = getFileListInDirectory(null, true, true, true);
+        allFilesList = getFileListInDirectory(null, true, true, true, SortingType.NONE);
+        clearTemp();
     }
     private static DirectoryHandlerGoogleDriveImplementation instance;
     public static DirectoryHandlerGoogleDriveImplementation getInstance() throws GeneralSecurityException, IOException {
@@ -71,12 +72,8 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     }
 
     @Override
-    public Path getWorkingDirectory(){
-        return null;
-    }
-    @Override
-    public void printFileList(final List<File> list) throws IOException {
-        for(File file : list){
+    public void printFileList(final List<File> fileList) throws IOException {
+        for(File file : fileList){
             System.out.println(file.getName() + " : " + file.getId() + " : " + file.getSize());
         }
     }
@@ -99,13 +96,11 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         Credential credential = new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
         return credential;
     }
-
-    @Override
-    public String getFileIdByPath(final String filePathString) throws IOException {
+    protected String getFileIdByPath(final String filePathString) throws IOException {
         List<String> directories = new LinkedList<>(Arrays.asList(filePathString.split("/")));
         List<File> currentFileList;
         String currentDirectoryToSearch = "root";
-        boolean found = false;
+        boolean found;
         int i = 0;
         while(i < directories.size()){
             currentFileList = getCurrentDirectoryFiles(currentDirectoryToSearch);
@@ -117,7 +112,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
                     break;
                 }
             }
-            if(found == false){
+            if(!found){
                 throw new FileNotFoundException();
             }
             i++;
@@ -126,7 +121,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     }
 
     @Override
-    public void createRepository(final String repositoryName) throws IOException {
+    public void createRepository(final String repositoryName) throws Exception {
         File fileMetadata = new File();
         fileMetadata.setName(repositoryName);
         fileMetadata.setMimeType("application/vnd.google-apps.folder");
@@ -142,7 +137,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         createConfig(repositoryName, new DirectoryHandlerConfig());
     }
     @Override
-    public void createRepository(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException {
+    public void createRepository(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws Exception {
         File fileMetadata = new File();
         fileMetadata.setName(repositoryName);
         fileMetadata.setMimeType("application/vnd.google-apps.folder");
@@ -167,7 +162,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         fileMetadata.setParents(Collections.singletonList(getFileIdByPath(parentDirectoriesPathString)));
         fileMetadata.setMimeType("application/vnd.google-apps.folder");
         try {
-            File file = googleDriveClient
+            googleDriveClient
                     .files()
                     .create(fileMetadata)
                     .setFields("id, name, parents, mimeType")
@@ -179,7 +174,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         }
     }
     @Override
-    public boolean createFile(final String filePathString) throws Exception, FileAlreadyExistsException {
+    public void createFile(final String filePathString) throws Exception, FileAlreadyExistsException {
         String parentDirectoriesPathString = filePathString.substring(0, filePathString.lastIndexOf("/"));
         String fileName = filePathString.substring(filePathString.lastIndexOf("/") + 1);
         File fileMetadata = new File();
@@ -187,7 +182,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         fileMetadata.setParents(Collections.singletonList(getFileIdByPath(parentDirectoriesPathString)));
         fileMetadata.setMimeType("application/octet-stream");
         try {
-            File file = googleDriveClient
+            googleDriveClient
                     .files()
                     .create(fileMetadata)
                     .setFields("id, name, parents, mimeType")
@@ -197,91 +192,92 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             System.err.println("Unable to create file: " + e.getDetails());
             throw e;
         }
-        return true;
     }
     @Override
-    public void createConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException, FileAlreadyExistsException {
-        updateConfig(repositoryName, directoryHandlerConfig, null);
+    public void createConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws Exception {
+        Path configPath = workingDirectory.resolve("temp").resolve("config.properties");
+        configPath.toFile().createNewFile();
+        Properties config = new Properties();
+        FileInputStream fileInputStream = new FileInputStream(configPath.toFile());
+        InputStream inputStream = fileInputStream;
+        config.load(inputStream);
+        config.setProperty("maxRepositorySize", directoryHandlerConfig.getMaxRepositorySize());
+        config.setProperty("excludedExtensions", directoryHandlerConfig.getExcludedExtensionsString());
+        OutputStream outputStream = new FileOutputStream(configPath.toAbsolutePath().toString());
+        config.store(outputStream, "updatedConfig");
+        inputStream.close();
+        outputStream.close();
+        uploadFile(String.format("%s/config.properties", repositoryName), configPath.toFile());
+        clearTemp();
     }
-    @Override
-    public void updateConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig, final String directoriesWithMaxFileCountString) throws IOException {
-        String propertiesPathString;
-        Properties properties = getConfig(repositoryName);
-        if(directoryHandlerConfig == null && directoriesWithMaxFileCountString == null){
-            System.out.println("Config not updated");
-            return;
-        }
-        if(directoryHandlerConfig != null && directoriesWithMaxFileCountString == null){
-            properties.setProperty("maxRepositorySize", directoryHandlerConfig.getMaxRepositorySize());
-            properties.setProperty("excludedExtensions", directoryHandlerConfig.getExcludedExtensionsString());
-        }
-        if(directoryHandlerConfig == null && directoriesWithMaxFileCountString != null){
-            List<String> directoriesWithMaxFileCount = List.of(directoriesWithMaxFileCountString.split(","));
-            for(String directoryWithMaxFileCount : directoriesWithMaxFileCount){
-                String directory = directoryWithMaxFileCount.substring(0, directoryWithMaxFileCount.indexOf("-"));
-                String maxFileCount = directoryWithMaxFileCount.substring(directoryWithMaxFileCount.indexOf("-"));
-                properties.setProperty(directory, maxFileCount);
-            }
-        }
-        if(directoryHandlerConfig != null && directoriesWithMaxFileCountString != null){
-            properties.setProperty("maxRepositorySize", directoryHandlerConfig.getMaxRepositorySize());
-            properties.setProperty("excludedExtensions", directoryHandlerConfig.getExcludedExtensionsString());
-            List<String> directoriesWithMaxFileCount = List.of(directoriesWithMaxFileCountString.split(","));
-            for(String directoryWithMaxFileCount : directoriesWithMaxFileCount){
-                String directory = directoryWithMaxFileCount.substring(0, directoryWithMaxFileCount.indexOf("-"));
-                String maxFileCount = directoryWithMaxFileCount.substring(directoryWithMaxFileCount.indexOf("-"));
-                properties.setProperty(directory, maxFileCount);
-            }
-        }
-        OutputStream outputStream = new FileOutputStream(workingDirectory.resolve("temp").resolve("config.properties").toAbsolutePath().toString());
-        properties.store(outputStream, "updatedConfig");
-
-        Path tempPath = workingDirectory.resolve("temp");
-        Path configPath = tempPath.resolve("config.properties");
-        if(!Files.exists(tempPath)){
-            tempPath.toFile().mkdir();
-            configPath.toFile().createNewFile();
-        }
-        else{
-            if(!Files.exists(configPath)){
-                configPath.toFile().createNewFile();
-            }
-        }
-
+    protected void uploadFile(final String filePathString, final java.io.File file) throws IOException {
+        String fileName = file.getName();
+        String parentId = getFileIdByPath(filePathString.substring(0, filePathString.lastIndexOf("/")));
         File fileMetadata = new File();
-        fileMetadata.setName("config.properties");
-        fileMetadata.setParents(Collections.singletonList(getFileIdByPath(repositoryName)));
-
-        java.io.File localConfigFile = configPath.toFile();
-        FileContent mediaContent = new FileContent("text/plain", localConfigFile);
+        fileMetadata.setName(fileName);
+        fileMetadata.setParents(Collections.singletonList(parentId));
+        fileMetadata.setMimeType("application/octet-stream");
+        FileContent mediaContent = new FileContent("media/text", file);
         try {
-            File file = googleDriveClient
-                    .files()
-                    .create(fileMetadata, mediaContent)
-                    .setFields("id, name, size, parents, mimeType")
-                    .execute();
+            googleDriveClient.files().create(fileMetadata, mediaContent).setFields("id, name, parents, mimeType").execute();
         }
         catch (GoogleJsonResponseException e) {
             System.err.println("Unable to upload file: " + e.getDetails());
             throw e;
         }
     }
+    @Override
+    public void updateConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig, final String directoriesWithMaxFileCountString) throws IOException {
+        Properties config = getConfig(repositoryName);
+        deleteFile(String.format("%s/config.properties", repositoryName));
+        if(directoryHandlerConfig == null && directoriesWithMaxFileCountString == null){
+            System.out.println("Config not updated");
+            return;
+        }
+        if(directoryHandlerConfig != null && directoriesWithMaxFileCountString == null){
+            config.setProperty("maxRepositorySize", directoryHandlerConfig.getMaxRepositorySize());
+            config.setProperty("excludedExtensions", directoryHandlerConfig.getExcludedExtensionsString());
+        }
+        if(directoryHandlerConfig == null && directoriesWithMaxFileCountString != null){
+            List<String> directoriesWithMaxFileCount = List.of(directoriesWithMaxFileCountString.split(","));
+            for(String directoryWithMaxFileCount : directoriesWithMaxFileCount){
+                String directory = directoryWithMaxFileCount.substring(0, directoryWithMaxFileCount.indexOf("-"));
+                String maxFileCount = directoryWithMaxFileCount.substring(directoryWithMaxFileCount.indexOf("-") + 1);
+                config.setProperty(directory, maxFileCount);
+            }
+        }
+        if(directoryHandlerConfig != null && directoriesWithMaxFileCountString != null){
+            config.setProperty("maxRepositorySize", directoryHandlerConfig.getMaxRepositorySize());
+            config.setProperty("excludedExtensions", directoryHandlerConfig.getExcludedExtensionsString());
+            List<String> directoriesWithMaxFileCount = List.of(directoriesWithMaxFileCountString.split(","));
+            for(String directoryWithMaxFileCount : directoriesWithMaxFileCount){
+                String directory = directoryWithMaxFileCount.substring(0, directoryWithMaxFileCount.indexOf("-"));
+                String maxFileCount = directoryWithMaxFileCount.substring(directoryWithMaxFileCount.indexOf("-") + 1);
+                config.setProperty(directory, maxFileCount);
+            }
+        }
+        OutputStream outputStream = new FileOutputStream(workingDirectory.resolve("temp").resolve("config.properties").toAbsolutePath().toString());
+        config.store(outputStream, "updatedConfig");
+        outputStream.close();
+        uploadFile(String.format("%s/config.properties", repositoryName), workingDirectory.resolve("temp").resolve("config.properties").toFile());
+        clearTemp();
+    }
 
     @Override
     public Properties getConfig(final String repositoryName) throws IOException {
         String downloadPathString = "temp";
-        downloadFile(repositoryName + "/config.properties", downloadPathString, true);
-        Properties properties = new Properties();
+        downloadFile(String.format("%s/config.properties",repositoryName), downloadPathString, true);
+        Properties config = new Properties();
         FileInputStream fileInputStream = new FileInputStream(workingDirectory.resolve(downloadPathString).resolve("config.properties").toFile());
         InputStream inputStream = fileInputStream;
-        properties.load(inputStream);
-        return properties;
-
+        config.load(inputStream);
+        inputStream.close();
+        return config;
     }
     @Override
     public void moveOrRenameFile(final String oldPathString, final String newPathString) throws IOException {
         File file = googleDriveClient.files().get(oldPathString)
-                .setFields("id, name, size, parents, mimeType")
+                .setFields("id, name, parents, mimeType")
                 .execute();
         StringBuilder previousParents = new StringBuilder();
         for (String parent : file.getParents()) {
@@ -289,7 +285,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             previousParents.append(',');
         }
         try {
-            file = googleDriveClient.files().update(oldPathString, null)
+            googleDriveClient.files().update(oldPathString, null)
                     .setAddParents(newPathString)
                     .setRemoveParents(previousParents.toString())
                     .setFields("id, name, size, parents, mimeType")
@@ -311,6 +307,15 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         }
         return count;
     }
+    protected void clearTemp() throws IOException {
+        java.io.File tempDirectory = workingDirectory.resolve("temp").toFile();
+        if(tempDirectory.exists()){
+            FileUtils.cleanDirectory(tempDirectory);
+        }
+        else{
+            Files.createDirectory(workingDirectory.resolve("temp"));
+        }
+    }
     @Override
     public long getFileSize(final String filePathString) throws NullPointerException, IOException {
         long fileSize = 0;
@@ -331,7 +336,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             }
         }
         else{
-            FileList result = googleDriveClient.files().list().setQ(String.format("'%s' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false", getFileIdByPath(directoryPathString))).setFields("files(id, name, size, parents, mimeType)").setSpaces("drive").execute();
+            FileList result = googleDriveClient.files().list().setQ(String.format("'%s' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false", getFileIdByPath(directoryPathString))).setFields("files(id, name, parents, mimeType)").setSpaces("drive").execute();
             List<File> files = result.getFiles();
             if(files != null && !files.isEmpty()){
                 for(File file : files){
@@ -343,11 +348,29 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     }
     @Override
     public void writeToFile(final String filePathString, final String textToWrite) throws IOException {
-
+        String fileName = filePathString.substring(filePathString.lastIndexOf("/") + 1);
+        downloadFile(filePathString, "temp", true);
+        deleteFile(filePathString);
+        String parentId = getFileIdByPath(filePathString.substring(0, filePathString.lastIndexOf("/")));
+        File fileMetadata = new File();
+        fileMetadata.setName(fileName);
+        fileMetadata.setParents(Collections.singletonList(parentId));
+        fileMetadata.setMimeType("application/octet-stream");
+        java.io.File tempFile = workingDirectory.resolve(Paths.get("temp")).resolve(fileName).toFile();
+        FileUtils.writeStringToFile(tempFile, textToWrite, "UTF-8", true);
+        FileContent mediaContent = new FileContent("media/text", tempFile);
+        try {
+            googleDriveClient.files().create(fileMetadata, mediaContent).setFields("id, name, parents, mimeType").execute();
+        }
+        catch (GoogleJsonResponseException e) {
+            System.err.println("Unable to upload file: " + e.getDetails());
+            throw e;
+        }
+        clearTemp();
     }
     @Override
     public void deleteFile(final String filePathString) throws IOException {
-        googleDriveClient.files().delete(getFileIdByPath(filePathString));
+        googleDriveClient.files().delete(getFileIdByPath(filePathString)).execute();
     }
     @Override
     public void downloadFile(final String filePathString, final String downloadPathString, final boolean overwrite) throws IOException {
@@ -371,13 +394,13 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         java.io.File file = downloadPathParent.resolve(fileName).toFile();
         InputStream inputStream = new ByteArrayInputStream(((ByteArrayOutputStream)outputStream).toByteArray());
         FileUtils.copyInputStreamToFile(inputStream, file);
+        inputStream.close();
+        outputStream.close();
     }
 
     @Override
-    public List<File> getFileListInDirectory(final String directoryPathString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories) throws IOException {
+    public List<File> getFileListInDirectory(final String directoryPathString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException {
         List<File> fileList = new ArrayList<>();
-        boolean doingRecursiveSearch = false;
-
         if(!includeFiles && !includeDirectories){
             System.out.println("error");
         }
@@ -430,7 +453,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
                 List<File> currentFileList = new ArrayList<>();
                 String currentDirectoryToSearch = null;
                 while(currentFileList != null){
-                    currentFileList = getFileListInDirectory(currentDirectoryToSearch,false, includeFiles, includeDirectories);
+                    currentFileList = getFileListInDirectory(currentDirectoryToSearch,false, includeFiles, includeDirectories, SortingType.NONE);
                     for(File file : currentFileList) {
                         fileList.add(file);
                         if(file.getMimeType().equals("application/vnd.google-apps.folder")){
@@ -461,7 +484,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
                 }
             }
         }
-        return fileList;
+        return sortList(fileList, sortingType);
     }
     protected List<File> getCurrentDirectoryFiles(final String currentDirectoryId) throws IOException {
         List<File> fileList = new ArrayList<>();
@@ -478,13 +501,13 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         return fileList;
     }
     @Override
-    public List<File> getAllFiles(final String directoryPathString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException {
-        return sortList(getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories), sortingType);
+    public List<File> getAllFiles(final SortingType sortingType) throws IOException {
+        return getFileListInDirectory(null, true, true, true, sortingType);
     }
 
     @Override
     public List<File> getFilesForSearchName(final String directoryPathString, final String search, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException {
-        List<File> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories);
+        List<File> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE);
         List<File> fileList = new ArrayList<>();
         for(File file : directoryToSearchList){
             if(file.getName().contains(search)){
@@ -497,7 +520,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     @Override
     public List<File> getFilesForSearchNameAndExtensions(final String directoryPathString, final String search, final String searchExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException {
         List<String> searchExtensionsList = List.of(searchExtensionsString.split(","));
-        List<File> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories);
+        List<File> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE);
         List<File> fileList = new ArrayList<>();
         for (File file : directoryToSearchList) {
             for (String extension : searchExtensionsList) {
@@ -514,7 +537,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     @Override
     public List<File> getFilesForSearchNameAndExcludedExtensions(final String directoryPathString, final String search, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException {
         List<String> searchExcludedExtensionsList = List.of(searchExcludedExtensionsString.split(","));
-        List<File> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories);
+        List<File> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE);
         List<File> fileList = new ArrayList<>();
         for (File file : directoryToSearchList) {
             for (String extension : searchExcludedExtensionsList) {
@@ -533,7 +556,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         List<String> searchExtensionsList = List.of(searchExtensionsString.split(","));
         List<String> searchExcludedExtensionsList = List.of(searchExcludedExtensionsString.split(","));
         List<File> fileList = new ArrayList<>();
-        List<File> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories);
+        List<File> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE);
         for (File file : directoryToSearchList) {
             for (String excludedExtension : searchExcludedExtensionsList) {
                 if (!file.getName().toLowerCase().endsWith(excludedExtension.toLowerCase())) {
@@ -554,7 +577,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     public List<File> getFilesForExtensions(final String directoryPathString, final String searchExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException {
         List<String> searchExtensionsList = List.of(searchExtensionsString.split(","));
         List<File> fileList = new ArrayList<>();
-        List<File> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories);
+        List<File> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE);
         for (File file : directoryToSearchList) {
             for (String extension : searchExtensionsList) {
                 if (file.getName().toLowerCase().endsWith(extension.toLowerCase())) {
@@ -569,7 +592,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     public List<File> getFilesForExcludedExtensions(final String directoryPathString, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException {
         List<String> searchExcludedExtensionsList = List.of(searchExcludedExtensionsString.split(","));
         List<File> fileList = new ArrayList<>();
-        List<File> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories);
+        List<File> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE);
         for (File file : directoryToSearchList) {
             for (String excludedExtension : searchExcludedExtensionsList) {
                 if (!file.getName().toLowerCase().endsWith(excludedExtension.toLowerCase())) {
@@ -585,7 +608,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         List<String> searchExtensionsList = List.of(searchExtensionsString.split(","));
         List<String> searchExcludedExtensionsList = List.of(searchExcludedExtensionsString.split(","));
         List<File> fileList = new ArrayList<>();
-        List<File> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories);
+        List<File> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE);
         for (File file : directoryToSearchList) {
             for (String excludedExtension : searchExcludedExtensionsList) {
                 if (!file.getName().toLowerCase().endsWith(excludedExtension.toLowerCase())) {
@@ -601,9 +624,9 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     }
 
     @Override
-    public List<File> getFilesWithName(final String directoryPathString, final String searchListString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException {
+    public List<File> getFilesWithNames(final String directoryPathString, final String searchListString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws IOException {
         List<String> searchList = List.of(searchListString.split(","));
-        List<File> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories);
+        List<File> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE);
         List<File> foundFiles = new ArrayList<>();
         for (File file : directoryToSearchList) {
             for(String search : searchList){
@@ -623,7 +646,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             System.out.println("Invalid range");
         }
         List<File> fileList = new ArrayList<>();
-        List<File> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories);
+        List<File> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE);
         for (File file : directoryToSearchList) {
             if(dateCreated && !dateModified){
                 Date fileCreationDate = new Date(file.getCreatedTime().getValue());
@@ -652,6 +675,9 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     }
 
     protected List<File> sortList(List<File> listToSort, final SortingType sortingType){
+        if(sortingType == SortingType.NONE){
+            return listToSort;
+        }
         if(sortingType == SortingType.NAME){
             listToSort.sort(new GoogleDriveComparators.NameComparator());
         }
@@ -665,7 +691,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             listToSort.sort(new GoogleDriveComparators.ModificationDateComparator());
         }
         else{
-            return listToSort;
+            System.out.println("specify sorting type");
         }
         return listToSort;
     }
