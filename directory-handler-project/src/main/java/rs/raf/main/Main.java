@@ -53,6 +53,7 @@ public class Main {
 				System.exit(0);
 			}
 		}*/
+		directoryHandler.createRepository("customRep");
 		directoryHandler.updateConfig("customRep", new DirectoryHandlerConfig("12345", "exe,bat"), "testDir1-20,testDir2-30");
 	}
 }

@@ -34,7 +34,7 @@ import java.util.*;
 
 public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHandlerSpecification<File> {
     public static List<File> allFilesList;
-    private static Path workingDirectory = Paths.get("directory-handler-project");
+    private static final Path workingDirectory = Paths.get("DirectoryHandlerGoogleDrive");
     private static Drive googleDriveClient;
     private static String APPLICATION_NAME = "directory-handler-lbojanic";
     private static JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
@@ -48,10 +48,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         try {
             DirectoryHandlerManager.registerDirectoryHandler(DirectoryHandlerGoogleDriveImplementation.getInstance());
         }
-        catch (GeneralSecurityException e) {
-            throw new RuntimeException(e);
-        }
-        catch (IOException e) {
+        catch (GeneralSecurityException | IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -70,10 +67,9 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     @Override
     public void createConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws Exception {
         Path configPath = workingDirectory.resolve("temp").resolve("config.properties");
-        configPath.toFile().createNewFile();
+        Files.createFile(configPath);
         Properties config = new Properties();
-        FileInputStream fileInputStream = new FileInputStream(configPath.toFile());
-        InputStream inputStream = fileInputStream;
+        InputStream inputStream = new FileInputStream(configPath.toFile());
         config.load(inputStream);
         config.setProperty("maxRepositorySize", directoryHandlerConfig.getMaxRepositorySize());
         config.setProperty("excludedExtensions", directoryHandlerConfig.getExcludedExtensionsString());

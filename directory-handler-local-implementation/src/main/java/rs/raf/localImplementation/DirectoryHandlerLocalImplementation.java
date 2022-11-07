@@ -7,10 +7,12 @@ import rs.raf.exception.DirectoryHandlerExceptions;
 import rs.raf.model.DirectoryHandlerConfig;
 import rs.raf.model.LocalFile;
 import rs.raf.model.SortingType;
+import rs.raf.specification.DirectoryHandlerManager;
 import rs.raf.specification.IDirectoryHandlerSpecification;
 import rs.raf.util.LocalComparators;
 import java.io.*;
 import java.nio.file.*;
+import java.security.GeneralSecurityException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -20,6 +22,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
     private static final Path workingDirectory = Paths.get(System.getProperty("user.dir")).resolve("LocalRepositories");
     private static DirectoryHandlerLocalImplementation instance;
     static{
+        DirectoryHandlerManager.registerDirectoryHandler(DirectoryHandlerLocalImplementation.getInstance());
         if(!Files.exists(workingDirectory)){
             try {
                 Files.createDirectory(workingDirectory);
@@ -40,12 +43,16 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
     }
     @Override
     public void createConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException, MaxFileCountExceededException {
-        createFile(repositoryName + "/config.properties");
-        Properties config = getConfig(repositoryName);
+        Path configPath = workingDirectory.resolve(repositoryName).resolve("config.properties");
+        Files.createFile(configPath);
+        Properties config = new Properties();
+        InputStream inputStream = new FileInputStream(configPath.toFile());
+        config.load(inputStream);
         config.setProperty("maxRepositorySize", directoryHandlerConfig.getMaxRepositorySize());
         config.setProperty("excludedExtensions", directoryHandlerConfig.getExcludedExtensionsString());
-        OutputStream outputStream = new FileOutputStream(workingDirectory.resolve(repositoryName).resolve("config.properties").toAbsolutePath().toString());
+        OutputStream outputStream = new FileOutputStream(configPath.toAbsolutePath().toString());
         config.store(outputStream, "updatedConfig");
+        inputStream.close();
         outputStream.close();
     }
     @Override
@@ -70,7 +77,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
                 throw new MaxFileCountExceededException(parentDirectoryPathString);
             }
             Path filePath = workingDirectory.resolve(Paths.get(filePathString));
-            filePath.toFile().createNewFile();
+            Files.createFile(filePath);
         }
     }
     @Override
