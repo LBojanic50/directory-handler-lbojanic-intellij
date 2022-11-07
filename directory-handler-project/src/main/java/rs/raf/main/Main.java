@@ -53,7 +53,11 @@ public class Main {
 				System.exit(0);
 			}
 		}*/
-		directoryHandler.createRepository("customRep");
-		directoryHandler.updateConfig("customRep", new DirectoryHandlerConfig("12345", "exe,bat"), "testDir1-20,testDir2-30");
+		//directoryHandler.createRepository("newRep");
+		//directoryHandler.createDirectory("newRep/newDir");
+		directoryHandler.createFile("newRep/newDir/newFile.txt");
+		long fileSize = directoryHandler.getFileSize("newRep/newDir/newFile.txt");
+		System.out.println(fileSize);
+		//directoryHandler.updateConfig("newRep", new DirectoryHandlerConfig("12345", "exe,bat"), "testDir1-20,testDir2-30");
 	}
 }

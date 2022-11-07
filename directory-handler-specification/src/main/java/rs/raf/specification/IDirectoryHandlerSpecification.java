@@ -47,14 +47,14 @@ public interface IDirectoryHandlerSpecification<T> {
      * Deletes a file at the specified forward slash delimited path
      * @param filePathsString forward slash delimited path to the file delete
      */
-    void deleteFile(final String filePathsString) throws IOException;
+    void deleteFile(final String filePathsString) throws IOException, DirectoryHandlerExceptions.BadPathException;
     /**
      * Downloads a file at the specified forward slash delimited path to the specified forward slash delimited path to the download directory
      * @param filePathsString forward slash delimited path to the file to download
      * @param downloadAbsolutePathString forward slash delimited path to the download directory
      * @param overwrite if naming conflict occurs, determines if to overwrite the file or create a new one
      */
-    void downloadFile(final String filePathsString, final String downloadAbsolutePathString, final boolean overwrite) throws IOException;
+    void downloadFile(final String filePathsString, final String downloadAbsolutePathString, final boolean overwrite) throws IOException, DirectoryHandlerExceptions.NoFileAtPathException;
     /**
      * Gets all files in the working directory
      * @param sortingType SortingType enum element of the method of sorting to apply

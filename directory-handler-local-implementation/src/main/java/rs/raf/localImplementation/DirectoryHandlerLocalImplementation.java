@@ -42,7 +42,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         return instance;
     }
     @Override
-    public void createConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException, MaxFileCountExceededException {
+    public void createConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException {
         Path configPath = workingDirectory.resolve(repositoryName).resolve("config.properties");
         Files.createFile(configPath);
         Properties config = new Properties();
@@ -60,28 +60,85 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         List<String> directoryPathsList = List.of(directoryPathsString.split("-more-"));
         for(String directoryPathString : directoryPathsList){
             String parentDirectoryPathString = directoryPathString.substring(0, directoryPathString.lastIndexOf("/"));
-            Properties config = getConfig(directoryPathString);
-            if(getFileCount(parentDirectoryPathString) + 1 > Integer.parseInt(config.getProperty(parentDirectoryPathString))){
-                throw new MaxFileCountExceededException(parentDirectoryPathString);
+            String repositoryName = directoryPathString.substring(0, directoryPathString.indexOf("/"));
+            Properties config = getConfig(repositoryName);
+            if(config.getProperty(parentDirectoryPathString) != null){
+                if(getFileCount(parentDirectoryPathString) + 1 > Integer.parseInt(config.getProperty(parentDirectoryPathString))){
+                    throw new MaxFileCountExceededException(parentDirectoryPathString);
+                }
+                else{
+                    Files.createDirectories(workingDirectory.resolve(Paths.get(directoryPathString)));
+                }
             }
-            Files.createDirectories(workingDirectory.resolve(Paths.get(directoryPathString)));
         }
     }
+    protected boolean maxFileCountExceededCheck(final Properties config, final String parentDirectoryPathString) throws BadPathException {
+        if (config.getProperty(parentDirectoryPathString) != null) {
+            return getFileCount(parentDirectoryPathString) + 1 > Integer.parseInt(config.getProperty(parentDirectoryPathString));
+        }
+        return false;
+    }
+    protected boolean excludedExtensionsCheck(final Properties config, final String filePathString){
+        String excludedExtensionsString = config.getProperty("excludedExtensions");
+        if (excludedExtensionsString != null) {
+            List<String> excludedExtensionsList = List.of(excludedExtensionsString.split(","));
+            for(String excludedExtension : excludedExtensionsList){
+                if(filePathString.endsWith(String.format(".%s", excludedExtension))){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    protected boolean maxRepositorySizeExceededCheck(final Properties config, final String repositoryName, final String textToWrite){
+        if (config.getProperty("maxRepositorySize") != null) {
+            return getDirectorySize(repositoryName) + textToWrite.getBytes().length > Integer.parseInt(config.getProperty("maxRepositorySize"));
+        }
+        return false;
+    }
+    protected boolean badPathCheck(final String filePathString){
+        try{
+            workingDirectory.resolve(Paths.get(filePathString));
+        }
+        catch(InvalidPathException e){
+            return true;
+        }
+        return false;
+    }
+    protected boolean noFileAtPathCheck(final String filePathString){
+        if(!Files.exists(Paths.get(filePathString))){
+            return true;
+        }
+        return false;
+    }
     @Override
-    public void createFile(final String filePathsString) throws IOException, MaxFileCountExceededException {
+    public void createFile(final String filePathsString) throws IOException, MaxFileCountExceededException, MaxRepositorySizeExceededException, BadPathException, FileExtensionException {
         List<String> filePathsList = List.of(filePathsString.split("-more-"));
-        for(String filePathString : filePathsList){
+        for (String filePathString : filePathsList) {
+            String repositoryName = filePathsString.substring(0, filePathsString.indexOf("/"));
+            Properties config = getConfig(repositoryName);
             String parentDirectoryPathString = filePathString.substring(0, filePathString.lastIndexOf("/"));
-            Properties config = getConfig(filePathString);
-            if(getFileCount(parentDirectoryPathString) + 1 > Integer.parseInt(config.getProperty(parentDirectoryPathString))){
+            Path filePath;
+            String textToWrite = "sampleText";
+            if(!filePathString.contains("/") || badPathCheck(filePathString)){
+                throw new BadPathException(filePathString);
+            }
+            if(maxFileCountExceededCheck(config, parentDirectoryPathString)){
                 throw new MaxFileCountExceededException(parentDirectoryPathString);
             }
-            Path filePath = workingDirectory.resolve(Paths.get(filePathString));
+            if(excludedExtensionsCheck(config, filePathString)){
+                throw new FileExtensionException(filePathString.substring(filePathString.lastIndexOf("/") + 1));
+            }
+            filePath = workingDirectory.resolve(Paths.get(filePathString));
             Files.createFile(filePath);
+            if(maxRepositorySizeExceededCheck(config, repositoryName, textToWrite)){
+                throw new MaxRepositorySizeExceededException(repositoryName);
+            }
+            writeToFile(filePathString, textToWrite);
         }
     }
     @Override
-    public void createRepository(final String repositoryNames) throws IOException, FileAlreadyExistsException, MaxFileCountExceededException {
+    public void createRepository(final String repositoryNames) throws IOException {
         List<String> repositoryNameList = List.of(repositoryNames.split("-more-"));
         for(String repositoryName : repositoryNameList){
             Files.createDirectory(workingDirectory.resolve(repositoryName));
@@ -89,7 +146,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         }
     }
     @Override
-    public void createRepository(final String repositoryNames, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException, FileAlreadyExistsException, MaxFileCountExceededException {
+    public void createRepository(final String repositoryNames, final DirectoryHandlerConfig directoryHandlerConfig) throws IOException {
         List<String> repositoryNameList = List.of(repositoryNames.split("-more-"));
         for(String repositoryName : repositoryNameList){
             Files.createDirectory(workingDirectory.resolve(repositoryName));
@@ -97,9 +154,12 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         }
     }
     @Override
-    public void deleteFile(final String filePathsString) throws IOException {
+    public void deleteFile(final String filePathsString) throws IOException, BadPathException {
         List<String> filePathsList = List.of(filePathsString.split("-more-"));
         for(String filePathString : filePathsList){
+            if(badPathCheck(filePathString)){
+                throw new BadPathException(filePathString);
+            }
             File file = workingDirectory.resolve(Paths.get(filePathString)).toFile();
             if(file.isFile()){
                 FileUtils.delete(file);
@@ -109,9 +169,11 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
             }
         }
     }
+
+    //TODO exceptions
     //TODO if directory, copy all subdirectories recursively
     @Override
-    public void downloadFile(final String filePathsString, final String downloadAbsolutePathString, final boolean overwrite) throws IOException {
+    public void downloadFile(final String filePathsString, final String downloadAbsolutePathString, final boolean overwrite) throws IOException, NoFileAtPathException {
         Path downloadPath;
         if(downloadAbsolutePathString == null){
             downloadPath = workingDirectory.resolve("Downloads");
@@ -124,6 +186,9 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         }
         List<String> filePathsList = List.of(filePathsString.split("-more-"));
         for(String filePathString : filePathsList){
+            if(noFileAtPathCheck(filePathString)){
+                throw new NoFileAtPathException(filePathString);
+            }
             String fileName = String.valueOf(Paths.get(filePathString).getFileName());
             Path originalPath = workingDirectory.resolve(Paths.get(filePathString));
             if (overwrite) {
@@ -459,4 +524,5 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         }
         return listToSort;
     }
+
 }

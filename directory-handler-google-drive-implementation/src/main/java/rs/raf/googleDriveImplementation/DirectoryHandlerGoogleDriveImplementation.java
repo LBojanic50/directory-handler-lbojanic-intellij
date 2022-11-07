@@ -522,7 +522,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             googleDriveClient.files().update(oldPathString, null)
                     .setAddParents(newPathString)
                     .setRemoveParents(previousParents.toString())
-                    .setFields("id, name, size, parents, mimeType")
+                    .setFields("id, name, parents, mimeType")
                     .execute();
         } catch (GoogleJsonResponseException e) {
             System.err.println("Unable to move file: " + e.getDetails());
