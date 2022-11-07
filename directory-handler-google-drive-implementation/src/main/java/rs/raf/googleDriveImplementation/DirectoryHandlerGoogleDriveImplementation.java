@@ -47,6 +47,9 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     static{
         try {
             DirectoryHandlerManager.registerDirectoryHandler(DirectoryHandlerGoogleDriveImplementation.getInstance());
+            if(!Files.exists(workingDirectory)){
+                Files.createDirectory(workingDirectory);
+            }
         }
         catch (GeneralSecurityException | IOException e) {
             throw new RuntimeException(e);
