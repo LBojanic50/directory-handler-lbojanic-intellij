@@ -146,16 +146,19 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
             if(badPathCheck(directoryPathString)){
                 throw new BadPathException(directoryPathString);
             }
-            if(noFileAtPathCheck(directoryPathString)){
-                throw new NoFileAtPathException(directoryPathString);
-            }
             String repositoryName = directoryPathsString.split("/")[0];
+            if(nonExistentRepositoryCheck(repositoryName)){
+                throw new NonExistentRepositoryException(repositoryName);
+            }
             DirectoryHandlerConfig config = getConfig(repositoryName);
             String parentDirectory = replaceSlashesInPath(Paths.get(directoryPathString).getParent().toString());
             if(maxFileCountExceededCheck(config, parentDirectory)){
                 throw new MaxFileCountExceededException(parentDirectory);
             }
-            Files.createDirectories(workingDirectory.resolve(Paths.get(directoryPathString)));
+            if(noFileAtPathCheck(parentDirectory)){
+                createDirectories(parentDirectory);
+            }
+            Files.createDirectory(workingDirectory.resolve(Paths.get(directoryPathString)));
         }
     }
     @Override
@@ -166,10 +169,10 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
             if(badPathCheck(filePathString)){
                 throw new BadPathException(filePathString);
             }
-            if(noFileAtPathCheck(filePathString)){
-                throw new NoFileAtPathException(filePathString);
-            }
             String repositoryName = filePathString.split("/")[0];
+            if(nonExistentRepositoryCheck(repositoryName)){
+                throw new NonExistentRepositoryException(repositoryName);
+            }
             DirectoryHandlerConfig config = getConfig(repositoryName);
             String parentDirectory = replaceSlashesInPath(Paths.get(filePathString).getParent().toString());
             if(maxFileCountExceededCheck(config, parentDirectory)){
@@ -178,17 +181,16 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
             if(excludedExtensionsCheck(config, filePathString)){
                 throw new FileExtensionException(filePathString);
             }
-            Path filePath = workingDirectory.resolve(Paths.get(filePathString));
-            Files.createFile(filePath);
+            if(noFileAtPathCheck(parentDirectory)){
+                createDirectories(parentDirectory);
+            }
+            Files.createFile(workingDirectory.resolve(Paths.get(filePathString)));
         }
     }
     @Override
     public void createRepository(final String repositoryName, final String configString) throws BadPathException, NonExistentRepositoryException, IOException, InvalidConfigParametersException, InvalidParameterException, NoFileAtPathException {
         if(badPathCheck(repositoryName)){
             throw new BadPathException(repositoryName);
-        }
-        if(nonExistentRepositoryCheck(repositoryName)){
-            throw new NonExistentRepositoryException(repositoryName);
         }
         Files.createDirectory(workingDirectory.resolve(repositoryName));
         createConfig(repositoryName, configString);

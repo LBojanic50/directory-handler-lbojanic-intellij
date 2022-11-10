@@ -70,6 +70,7 @@ public class Main {
 				else{
 					throw new InvalidCommandException(command);
 				}
+				System.out.println("Done");
 			}
 			else if(splitCommand[0].equals("createDirectories")){
 				if(splitCommand.length == 2){
@@ -78,6 +79,7 @@ public class Main {
 				else{
 					throw new InvalidCommandException(command);
 				}
+				System.out.println("Done");
 			}
 			else if(splitCommand[0].equals("createFiles")){
 				if(splitCommand.length == 2){
@@ -86,6 +88,7 @@ public class Main {
 				else{
 					throw new InvalidCommandException(command);
 				}
+				System.out.println("Done");
 			}
 			else if(splitCommand[0].equals("createRepository")){
 				if(splitCommand.length == 3){
@@ -99,6 +102,7 @@ public class Main {
 				else{
 					throw new InvalidCommandException(command);
 				}
+				System.out.println("Done");
 			}
 			else if(splitCommand[0].equals("deleteFiles")){
 				if(splitCommand.length == 2){
@@ -107,6 +111,7 @@ public class Main {
 				else{
 					throw new InvalidCommandException(command);
 				}
+				System.out.println("Done");
 			}
 			else if(splitCommand[0].equals("downloadFiles")){
 				if(splitCommand.length == 3){
@@ -123,6 +128,7 @@ public class Main {
 				else{
 					throw new InvalidCommandException(command);
 				}
+				System.out.println("Done");
 			}
 			else if(splitCommand[0].equals("getConfig")){
 				if(splitCommand.length == 2){
@@ -204,7 +210,6 @@ public class Main {
 				else{
 					throw new InvalidCommandException(command);
 				}
-
 			}
 			else if(splitCommand[0].equals("getFileSize")){
 				if(splitCommand.length == 2){
@@ -284,6 +289,7 @@ public class Main {
 				else{
 					throw new InvalidCommandException(command);
 				}
+				System.out.println("Done");
 			}
 			else if(splitCommand[0].equals("updateConfig")){
 				String repositoryName;
@@ -306,14 +312,16 @@ public class Main {
 				else{
 					throw new InvalidCommandException(command);
 				}
+				System.out.println("Done");
 			}
 			else if(splitCommand[0].equals("writeToFile")){
 				if(splitCommand.length == 3){
-
+					directoryHandler.writeToFile(splitCommand[1], splitCommand[2]);
 				}
 				else{
 					throw new InvalidCommandException(command);
 				}
+				System.out.println("Done");
 			}
 			else if(command.equals("exit")){
 				System.exit(0);

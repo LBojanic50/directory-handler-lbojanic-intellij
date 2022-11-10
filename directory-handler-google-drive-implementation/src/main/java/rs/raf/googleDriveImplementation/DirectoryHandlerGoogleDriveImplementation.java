@@ -169,13 +169,16 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             if(badPathCheck(directoryPathString)){
                 throw new BadPathException(directoryPathString);
             }
-            if(noFileAtPathCheck(directoryPathString)){
-                throw new NoFileAtPathException(directoryPathString);
-            }
             String repositoryName = directoryPathString.split("/")[0];
+            if(nonExistentRepositoryCheck(repositoryName)){
+                throw new NonExistentRepositoryException(repositoryName);
+            }
             DirectoryHandlerConfig config = getConfig(repositoryName);
             String parentDirectory = replaceSlashesInPath(Paths.get(directoryPathString).getParent().toString());
             String directoryName = Paths.get(directoryPathString).getFileName().toString();
+            if(noFileAtPathCheck(parentDirectory)){
+                createDirectories(parentDirectory);
+            }
             if(maxFileCountExceededCheck(config, parentDirectory)){
                 throw new MaxFileCountExceededException(parentDirectory);
             }
@@ -194,13 +197,16 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             if(badPathCheck(filePathString)){
                 throw new BadPathException(filePathString);
             }
-            if(noFileAtPathCheck(filePathString)){
-                throw new NoFileAtPathException(filePathString);
-            }
             String repositoryName = filePathString.split("/")[0];
+            if(nonExistentRepositoryCheck(repositoryName)){
+                throw new NonExistentRepositoryException(repositoryName);
+            }
             DirectoryHandlerConfig config = getConfig(repositoryName);
             String parentDirectory = replaceSlashesInPath(Paths.get(filePathString).getParent().toString());
             String fileName = Paths.get(filePathString).getFileName().toString();
+            if(noFileAtPathCheck(parentDirectory)){
+                createDirectories(parentDirectory);
+            }
             if(maxFileCountExceededCheck(config, parentDirectory)){
                 throw new MaxFileCountExceededException(parentDirectory);
             }
@@ -218,9 +224,6 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     public void createRepository(final String repositoryName, final String configString) throws NonExistentRepositoryException, InvalidParameterException, NoFileAtPathException, IOException, BadPathException, InvalidConfigParametersException {
         if(badPathCheck(repositoryName)){
             throw new BadPathException(repositoryName);
-        }
-        if(nonExistentRepositoryCheck(repositoryName)){
-            throw new NonExistentRepositoryException(repositoryName);
         }
         File fileMetadata = new File();
         fileMetadata.setName(repositoryName);
@@ -279,7 +282,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             getFile.executeMediaAndDownloadTo(outputStream);
             String fileName = filePathString.substring(filePathString.lastIndexOf("/") + 1);
-            java.io.File destinationFile = downloadDestinationDirectoryPath.toFile();
+            java.io.File destinationFile = downloadDestinationDirectoryPath.resolve(fileName).toFile();
             InputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
             if(overwrite){
                 FileUtils.copyInputStreamToFile(inputStream, destinationFile);
@@ -909,7 +912,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         FileList result = googleDriveClient.files().list().setQ(String.format("'%s' in parents and trashed = false", currentDirectoryId)).setFields("files(id, name, parents, mimeType)").setSpaces("drive").execute();
         List<File> files = result.getFiles();
         if (files == null || files.isEmpty()) {
-            System.out.println("No files found.");
+            return new ArrayList<>();
         }
         else {
             fileList.addAll(files);
@@ -1010,9 +1013,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         if(badPathCheck(filePathString)){
             throw new BadPathException(filePathString);
         }
-        if(noFileAtPathCheck(filePathString)){
-            throw new NoFileAtPathException(filePathString);
-        }
+        //TODO handle parent doesn't exist exception
         String fileName = file.getName();
         String parentDirectory = replaceSlashesInPath(Paths.get(filePathString).getParent().toString());
         String parentId = getFileIdByPath(parentDirectory);
