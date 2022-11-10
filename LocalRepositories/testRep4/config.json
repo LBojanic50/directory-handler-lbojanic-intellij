@@ -1,0 +1,15 @@
+{
+    "maxRepositorySize": 1000,
+    "excludedExtensions": [
+        "json",
+        "bat",
+        "cs"
+    ],
+    "directoriesWithMaxFileCount": [
+        null,
+        {
+            "directoryName": "testDir1",
+            "maxFileCount": 35
+        }
+    ]
+}
