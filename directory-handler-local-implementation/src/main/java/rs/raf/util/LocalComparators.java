@@ -1,13 +1,17 @@
 package rs.raf.util;
 
+import rs.raf.exception.DirectoryHandlerExceptions;
 import rs.raf.localImplementation.DirectoryHandlerLocalImplementation;
 import rs.raf.model.LocalFile;
 
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
+import rs.raf.exception.DirectoryHandlerExceptions.*;
+import rs.raf.specification.DirectoryHandlerManager;
 
 public class LocalComparators {
     public static class CreationDateComparator implements Comparator<LocalFile> {
@@ -51,8 +55,22 @@ public class LocalComparators {
     public static class SizeComparator implements Comparator<LocalFile> {
         @Override
         public int compare(LocalFile file1, LocalFile file2) {
-            Long file1Size = DirectoryHandlerLocalImplementation.getInstance().getFileSize(file1.getFile().getAbsolutePath());
-            Long file2Size = DirectoryHandlerLocalImplementation.getInstance().getFileSize(file2.getFile().getAbsolutePath());
+            Long file1Size = null;
+            Long file2Size = null;
+            try {
+                file1Size = DirectoryHandlerManager.getDirectoryHandler().getFileSize(file1.getFile().getAbsolutePath());
+            }
+            catch (IOException | BadPathException | NoFileAtPathException | InvalidParameterException |
+                   NonExistentRepositoryException | MaxFileCountExceededException e) {
+                throw new RuntimeException(e);
+            }
+            try {
+                file2Size = DirectoryHandlerManager.getDirectoryHandler().getFileSize(file2.getFile().getAbsolutePath());
+            }
+            catch (IOException | BadPathException | NoFileAtPathException | MaxFileCountExceededException |
+                   InvalidParameterException | NonExistentRepositoryException e) {
+                throw new RuntimeException(e);
+            }
             return file1Size.compareTo(file2Size);
         }
     }
