@@ -12,7 +12,7 @@ import rs.raf.exception.DirectoryHandlerExceptions.*;
 
 public interface IDirectoryHandlerSpecification<T> {
 
-    void copyFiles(final String filePathsString, final String copyDestinationDirectoryString, final boolean overwrite) throws IOException, BadPathException, NoFileAtPathException, MaxFileCountExceededException, InvalidParameterException, NonExistentRepositoryException;
+    void copyFiles(String filePathsString, String copyDestinationDirectoryString, final boolean overwrite) throws IOException, BadPathException, NoFileAtPathException, MaxFileCountExceededException, InvalidParameterException, NonExistentRepositoryException;
     /**
      * Creates a specified config in the specified repository
      * @param repositoryName name of the repository to create the config in
@@ -33,31 +33,24 @@ public interface IDirectoryHandlerSpecification<T> {
      */
     void createFiles(String filePathsString) throws IOException, BadPathException, MaxFileCountExceededException, FileExtensionException, MaxRepositorySizeExceededException, NoFileAtPathException, InvalidParameterException, NonExistentRepositoryException;
     /**
-     * Creates a repository with the specified name and default config (maxRepositorySize=1073741824
-     *                                                                  excludedExtensions=)
-     * @param repositoryNames name of the repository to create
-     * @throws IOException
-     */
-    void createRepositories(final String repositoryNames) throws NoFileAtPathException, IOException, NonExistentRepositoryException, InvalidParameterException, BadPathException, InvalidConfigParametersException;
-    /**
      * Creates a repository with the specified name and custom config
-     * @param repositoryNames name of the repository to create
+     * @param repositoryName name of the repository to create
      * @param configString custom config
      * @throws IOException
      */
-    void createRepositories(final String repositoryNames, final String configString) throws NonExistentRepositoryException, InvalidParameterException, NoFileAtPathException, IOException, BadPathException, InvalidConfigParametersException;
+    void createRepository(final String repositoryName, final String configString) throws NonExistentRepositoryException, InvalidParameterException, NoFileAtPathException, IOException, BadPathException, InvalidConfigParametersException;
     /**
      * Deletes a file at the specified forward slash delimited path
      * @param filePathsString forward slash delimited path to the file delete
      */
-    void deleteFiles(final String filePathsString) throws NoFileAtPathException, BadPathException, IOException;
+    void deleteFiles(String filePathsString) throws NoFileAtPathException, BadPathException, IOException;
     /**
      * Downloads a file at the specified forward slash delimited path to the specified forward slash delimited path to the download directory
      * @param filePathsString forward slash delimited path to the file to download
      * @param downloadDestinationDirectoryString forward slash delimited path to the download directory
      * @param overwrite if naming conflict occurs, determines if to overwrite the file or create a new one
      */
-    void downloadFiles(final String filePathsString, final String downloadDestinationDirectoryString, boolean overwrite) throws NoFileAtPathException, IOException, MaxFileCountExceededException, BadPathException, InvalidParameterException, NonExistentRepositoryException;
+    void downloadFiles(String filePathsString, String downloadDestinationDirectoryString, boolean overwrite) throws NoFileAtPathException, IOException, MaxFileCountExceededException, BadPathException, InvalidParameterException, NonExistentRepositoryException;
     /**
      * Gets the Properties Object from the specified repository
      * @param repositoryName name of the repository to get the properties from
@@ -69,13 +62,13 @@ public interface IDirectoryHandlerSpecification<T> {
      * @param directoryPathString forward slash delimited string representation of the directory path to the directory of which to get the size of
      * @return long size of directory in bytes
      */
-    long getDirectorySize(final String directoryPathString) throws BadPathException, NoFileAtPathException, IOException;
+    long getDirectorySize(String directoryPathString) throws BadPathException, NoFileAtPathException, IOException;
     /**
      * Gets the size of a file at the specified forward slash delimited path to the file of which to get the size of
      * @param directoryPathString forward slash delimited string representation of the path to the directory of which to get the size of
      * @return int number of files in directory
      */
-    int getFileCount(final String directoryPathString) throws BadPathException, NoFileAtPathException, IOException;
+    int getFileCount(String directoryPathString) throws BadPathException, NoFileAtPathException, IOException;
     /**
      * Gets the file list for specified search parameters
      * @param directoryPathString forward slash delimited string representation of the path to the directory to search
@@ -91,7 +84,7 @@ public interface IDirectoryHandlerSpecification<T> {
      * @param filePathString forward slash delimited string representation of the path to the file of which to get the size of (/, \, \\)
      * @return long size of file in bytes
      */
-    long getFileSize(final String filePathString) throws MaxFileCountExceededException, BadPathException, NoFileAtPathException, IOException, InvalidParameterException, NonExistentRepositoryException;
+    long getFileSize(String filePathString) throws MaxFileCountExceededException, BadPathException, NoFileAtPathException, IOException, InvalidParameterException, NonExistentRepositoryException;
     /**
      * Gets the file list for specified search parameters
      * @param directoryPathString forward slash delimited string representation of the path to the directory to search
@@ -199,14 +192,14 @@ public interface IDirectoryHandlerSpecification<T> {
      * @return List<T> of files in search result
      */
     List<T> getFilesWithNames(final String directoryPathString, final String searchListString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws InvalidParameterException, NoFileAtPathException, IOException, BadPathException;
-    void moveFiles(final String filePathsString, final String moveDestinationDirectoryString, boolean overwrite) throws NoFileAtPathException, IOException, BadPathException, InvalidParameterException, NonExistentRepositoryException, MaxFileCountExceededException, MaxRepositorySizeExceededException;
+    void moveFiles(String filePathsString, String moveDestinationDirectoryString, boolean overwrite) throws NoFileAtPathException, IOException, BadPathException, InvalidParameterException, NonExistentRepositoryException, MaxFileCountExceededException, MaxRepositorySizeExceededException;
     void printConfig(final DirectoryHandlerConfig directoryHandlerConfig) throws IOException;
     /**
      * Prints the list of files specified
      * @param fileList file list to print
      */
     void printFileList(final List<T> fileList) throws IOException;
-    void renameFile(final String filePathString, final String newFileName) throws NoFileAtPathException, IOException, MaxFileCountExceededException, BadPathException, InvalidParameterException, NonExistentRepositoryException, FileExtensionException;
+    void renameFile(String filePathString, final String newFileName) throws NoFileAtPathException, IOException, MaxFileCountExceededException, BadPathException, InvalidParameterException, NonExistentRepositoryException, FileExtensionException;
     /**
      * Updates the config of specified repository with the specified config
      *
@@ -220,5 +213,5 @@ public interface IDirectoryHandlerSpecification<T> {
      * @param filePathString forward slash delimited string representation of the path to the file to create
      * @param textToWrite text to write
      */
-    void writeToFile(final String filePathString, final String textToWrite) throws BadPathException, NoFileAtPathException, IOException, MaxFileCountExceededException, InvalidParameterException, NonExistentRepositoryException, FileExtensionException, MaxRepositorySizeExceededException;
+    void writeToFile(String filePathString, final String textToWrite) throws BadPathException, NoFileAtPathException, IOException, MaxFileCountExceededException, InvalidParameterException, NonExistentRepositoryException, FileExtensionException, MaxRepositorySizeExceededException;
 }

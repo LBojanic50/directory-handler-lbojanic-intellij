@@ -30,134 +30,272 @@ public class Main {
 		IDirectoryHandlerSpecification directoryHandler = DirectoryHandlerManager.getDirectoryHandler();
 		while(true){
 			String command = reader.readLine();
-			if(command.startsWith("copyFiles ")){
-				directoryHandler.copyFiles("customRep/myDir1/test.txt", "customRep/myDir2", false);
+			String[] splitCommand = command.split(" ");
+			if(splitCommand[0].equals("copyFiles")){
+				if(splitCommand.length == 4){
+					if(splitCommand[2].equals("default")){
+						if(splitCommand[3].equals("true")){
+							directoryHandler.copyFiles(splitCommand[1], null, true);
+						}
+						else if(splitCommand[3].equals("false")){
+							directoryHandler.copyFiles(splitCommand[1], null, false);
+						}
+						else{
+							throw new InvalidCommandException(command);
+						}
+					}
+					else{
+						if(splitCommand[3].equals("true")){
+							directoryHandler.copyFiles(splitCommand[1], splitCommand[2], true);
+						}
+						else if(splitCommand[3].equals("false")){
+							directoryHandler.copyFiles(splitCommand[1], splitCommand[2], false);
+						}
+						else{
+							throw new InvalidCommandException(command);
+						}
+					}
+				}
 				System.out.println("Done");
 			}
-			if(command.startsWith("createConfig ")) {
-				System.out.println("test");
-			}
-			if(command.startsWith("createDirectories ")){
-				String directoryPathString = command.split(" ")[1];
-				directoryHandler.createDirectories(directoryPathString);
-			}
-			if(command.startsWith("createFiles ")){
-				String filePathString = command.split(" ")[1];
-				directoryHandler.createFiles(filePathString);
-			}
-			if(command.startsWith("createRepositories ")){
-				String[] createRepositoryCommand = command.split(" ");
-				String repositoryName;
-				String configString;
-				if(createRepositoryCommand.length == 2){
-					repositoryName = createRepositoryCommand[1];
-					directoryHandler.createRepositories(repositoryName);
-				}
-				else if(createRepositoryCommand.length == 3){
-					repositoryName = createRepositoryCommand[1];
-					configString = createRepositoryCommand[2];
-					directoryHandler.createRepositories(repositoryName, configString);
+			else if(splitCommand[0].equals("createConfig")) {
+				if(splitCommand.length == 3){
+					if(splitCommand[2].equals("default")){
+						directoryHandler.createConfig(splitCommand[1], null);
+					}
+					else{
+						directoryHandler.createConfig(splitCommand[1], splitCommand[2]);
+					}
 				}
 				else{
 					throw new InvalidCommandException(command);
 				}
 			}
-			if(command.startsWith("deleteFiles ")){
-				System.out.println("test");
-			}
-			if(command.startsWith("downloadFiles ")){
-				String filePathString = command.split(" ")[1];
-				directoryHandler.downloadFiles(filePathString, null, false);
-			}
-			if(command.startsWith("getConfig ")){
-				String filePathString = command.split(" ")[1];
-				directoryHandler.downloadFiles(filePathString, null, false);
-			}
-			if(command.startsWith("getDirectorySize ")){
-				String directoryPathString = command.split(" ")[1];
-				System.out.println(directoryHandler.getDirectorySize(directoryPathString));
-			}
-			if(command.startsWith("getFileCount ")){
-				String filePathString = command.split(" ")[1];
-				System.out.println(directoryHandler.getFileSize(filePathString));
-			}
-			if(command.startsWith("getFileListInDirectory ")){
-				String[] getFileListInDirectoryCommand = command.split(" ");
-				directoryHandler.printFileList(directoryHandler.getFileListInDirectory(getFileListInDirectoryCommand[1], true, true, true, SortingType.NAME));
-			}
-			if(command.startsWith("getFileSize ")){
-				String filePathString = command.split(" ")[1];
-				System.out.println(directoryHandler.getFileSize(filePathString));
-			}
-			if(command.startsWith("getFilesForDateRange ")){
-				String filePathString = command.split(" ")[1];
-				System.out.println(directoryHandler.getFileSize(filePathString));
-			}
-			if(command.startsWith("getFilesForExcludedExtensions ")){
-				String filePathString = command.split(" ")[1];
-				System.out.println(directoryHandler.getFileSize(filePathString));
-			}
-			if(command.startsWith("getFilesForExtensions ")){
-				String filePathString = command.split(" ")[1];
-				System.out.println(directoryHandler.getFileSize(filePathString));
-			}
-			if(command.startsWith("getFilesForExtensionsAndExcludedExtensions ")){
-				String filePathString = command.split(" ")[1];
-				System.out.println(directoryHandler.getFileSize(filePathString));
-			}
-			if(command.startsWith("getFilesForSearchName ")){
-				String filePathString = command.split(" ")[1];
-				System.out.println(directoryHandler.getFileSize(filePathString));
-			}
-			if(command.startsWith("getFilesForSearchNameAndExcludedExtensions ")){
-				String filePathString = command.split(" ")[1];
-				System.out.println(directoryHandler.getFileSize(filePathString));
-			}
-			if(command.startsWith("getFilesForSearchNameAndExtensions ")){
-				String filePathString = command.split(" ")[1];
-				System.out.println(directoryHandler.getFileSize(filePathString));
-			}
-			if(command.startsWith("getFilesForSearchNameAndExtensionsAndExcludedExtensions ")){
-				String filePathString = command.split(" ")[1];
-				System.out.println(directoryHandler.getFileSize(filePathString));
-			}
-			if(command.startsWith("getFilesWithNames ")){
-				String filePathString = command.split(" ")[1];
-				System.out.println(directoryHandler.getFileSize(filePathString));
-			}
-			if(command.startsWith("moveFiles ")){
-				String filePathString = command.split(" ")[1];
-				System.out.println(directoryHandler.getFileSize(filePathString));
-			}
-			if(command.startsWith("printConfig ")){
-				String filePathString = command.split(" ")[1];
-				System.out.println(directoryHandler.getFileSize(filePathString));
-			}
-			if(command.startsWith("printFileList ")){
-				String filePathString = command.split(" ")[1];
-				System.out.println(directoryHandler.getFileSize(filePathString));
-			}
-			if(command.startsWith("renameFile ")){
-				String[] renameFileCommand = command.split(" ");
-				if(renameFileCommand.length  == 3){
-					directoryHandler.renameFile(renameFileCommand[1], renameFileCommand[2]);
+			else if(splitCommand[0].equals("createDirectories")){
+				if(splitCommand.length == 2){
+					directoryHandler.createDirectories(splitCommand[1]);
 				}
 				else{
 					throw new InvalidCommandException(command);
 				}
 			}
-			if(command.startsWith("updateConfig ")){
-				String[] updateConfigCommand = command.split(" ");
+			else if(splitCommand[0].equals("createFiles")){
+				if(splitCommand.length == 2){
+					directoryHandler.createFiles(splitCommand[1]);
+				}
+				else{
+					throw new InvalidCommandException(command);
+				}
+			}
+			else if(splitCommand[0].equals("createRepository")){
+				if(splitCommand.length == 3){
+					if(splitCommand[2].equals("default")){
+						directoryHandler.createRepository(splitCommand[1], null);
+					}
+					else{
+						directoryHandler.createRepository(splitCommand[1], splitCommand[2]);
+					}
+				}
+				else{
+					throw new InvalidCommandException(command);
+				}
+			}
+			else if(splitCommand[0].equals("deleteFiles")){
+				if(splitCommand.length == 2){
+					directoryHandler.deleteFiles(splitCommand[1]);
+				}
+				else{
+					throw new InvalidCommandException(command);
+				}
+			}
+			else if(splitCommand[0].equals("downloadFiles")){
+				if(splitCommand.length == 3){
+					if(splitCommand[3].equals("true")){
+						directoryHandler.downloadFiles(splitCommand[1], splitCommand[2], true);
+					}
+					else if(splitCommand[3].equals("false")){
+						directoryHandler.downloadFiles(splitCommand[1], splitCommand[2], false);
+					}
+					else{
+						throw new InvalidCommandException(command);
+					}
+				}
+				else{
+					throw new InvalidCommandException(command);
+				}
+			}
+			else if(splitCommand[0].equals("getConfig")){
+				if(splitCommand.length == 2){
+					directoryHandler.printConfig(directoryHandler.getConfig(splitCommand[1]));
+				}
+				else{
+					throw new InvalidCommandException(command);
+				}
+			}
+			else if(splitCommand[0].equals("getDirectorySize")){
+				if(splitCommand.length == 2){
+					System.out.println(directoryHandler.getDirectorySize(splitCommand[1]));
+				}
+				else{
+					throw new InvalidCommandException(command);
+				}
+			}
+			else if(splitCommand[0].equals("getFileCount")){
+				if(splitCommand.length == 2){
+					System.out.println(directoryHandler.getFileCount(splitCommand[1]));
+				}
+				else{
+					throw new InvalidCommandException(command);
+				}
+			}
+			else if(splitCommand[0].equals("getFileListInDirectory")){
+				if(splitCommand.length == 6){
+					boolean recursive;
+					boolean includeFiles;
+					boolean includeDirectories;
+					SortingType sortingType;
+					if(splitCommand[2].equals("true")){
+						recursive = true;
+					}
+					else if(splitCommand[2].equals("false")){
+						recursive = false;
+					}
+					else{
+						throw new InvalidCommandException(command);
+					}
+					if(splitCommand[3].equals("true")){
+						includeFiles = true;
+					}
+					else if(splitCommand[3].equals("false")){
+						includeFiles = false;
+					}
+					else{
+						throw new InvalidCommandException(command);
+					}
+					if(splitCommand[4].equals("true")){
+						includeDirectories = true;
+					}
+					else if(splitCommand[4].equals("false")){
+						includeDirectories = false;
+					}
+					else{
+						throw new InvalidCommandException(command);
+					}
+					if(splitCommand[5].equals("none")) {
+						sortingType = SortingType.NONE;
+					}
+					else if(splitCommand[5].equals("name")) {
+						sortingType = SortingType.NAME;
+					}
+					else if(splitCommand[5].equals("dateCreated")) {
+						sortingType = SortingType.DATE_CREATED;
+					}
+					else if(splitCommand[5].equals("dateModified")) {
+						sortingType = SortingType.DATE_MODIFIED;
+					}
+					else if(splitCommand[5].equals("size")) {
+						sortingType = SortingType.SIZE;
+					}
+					else{
+						throw new InvalidCommandException(command);
+					}
+					directoryHandler.printFileList(directoryHandler.getFileListInDirectory(splitCommand[1], recursive, includeFiles, includeDirectories, sortingType));
+				}
+				else{
+					throw new InvalidCommandException(command);
+				}
+
+			}
+			else if(splitCommand[0].equals("getFileSize")){
+				if(splitCommand.length == 2){
+					System.out.println(directoryHandler.getFileSize(splitCommand[1]));
+				}
+				else{
+					throw new InvalidCommandException(command);
+				}
+			}
+			else if(splitCommand[0].equals("getFilesForDateRange")){
+				String filePathString = command.split(" ")[1];
+				System.out.println(directoryHandler.getFileSize(filePathString));
+			}
+			else if( splitCommand[0].equals("getFilesForExcludedExtensions")){
+				String filePathString = command.split(" ")[1];
+				System.out.println(directoryHandler.getFileSize(filePathString));
+			}
+			else if(splitCommand[0].equals("getFilesForExtensions")){
+				String filePathString = command.split(" ")[1];
+				System.out.println(directoryHandler.getFileSize(filePathString));
+			}
+			else if(splitCommand[0].equals("getFilesForExtensionsAndExcludedExtensions")){
+				String filePathString = command.split(" ")[1];
+				System.out.println(directoryHandler.getFileSize(filePathString));
+			}
+			else if(splitCommand[0].equals("getFilesForSearchName")){
+				String filePathString = command.split(" ")[1];
+				System.out.println(directoryHandler.getFileSize(filePathString));
+			}
+			else if(splitCommand[0].equals("getFilesForSearchNameAndExcludedExtensions")){
+				String filePathString = command.split(" ")[1];
+				System.out.println(directoryHandler.getFileSize(filePathString));
+			}
+			else if(splitCommand[0].equals("getFilesForSearchNameAndExtensions")){
+				String filePathString = command.split(" ")[1];
+				System.out.println(directoryHandler.getFileSize(filePathString));
+			}
+			else if(splitCommand[0].equals("getFilesForSearchNameAndExtensionsAndExcludedExtensions")){
+				String filePathString = command.split(" ")[1];
+				System.out.println(directoryHandler.getFileSize(filePathString));
+			}
+			else if(splitCommand[0].equals("getFilesWithNames")){
+				String filePathString = command.split(" ")[1];
+				System.out.println(directoryHandler.getFileSize(filePathString));
+			}
+			else if(splitCommand[0].equals("moveFiles")){
+				if(splitCommand.length == 4){
+					if(splitCommand[2].equals("default")){
+						if(splitCommand[3].equals("true")){
+							directoryHandler.moveFiles(splitCommand[1], null, true);
+						}
+						else if(splitCommand[3].equals("false")){
+							directoryHandler.moveFiles(splitCommand[1], null, false);
+						}
+						else{
+							throw new InvalidCommandException(command);
+						}
+					}
+					else{
+						if(splitCommand[3].equals("true")){
+							directoryHandler.moveFiles(splitCommand[1], splitCommand[2], true);
+						}
+						else if(splitCommand[3].equals("false")){
+							directoryHandler.moveFiles(splitCommand[1], splitCommand[2], false);
+						}
+						else{
+							throw new InvalidCommandException(command);
+						}
+					}
+				}
+				System.out.println("Done");
+			}
+			else if(splitCommand[0].equals("renameFile")){
+				if(splitCommand.length  == 3){
+					directoryHandler.renameFile(splitCommand[1], splitCommand[2]);
+				}
+				else{
+					throw new InvalidCommandException(command);
+				}
+			}
+			else if(splitCommand[0].equals("updateConfig")){
 				String repositoryName;
 				String configString;
 				ConfigUpdateTypes configUpdateType;
-				if(updateConfigCommand.length == 4){
-					repositoryName = updateConfigCommand[1];
-					configString = updateConfigCommand[2];
-					if(updateConfigCommand[3].equals("replace")){
+				if(splitCommand.length == 4){
+					repositoryName = splitCommand[1];
+					configString = splitCommand[2];
+					if(splitCommand[3].equals("replace")){
 						configUpdateType = ConfigUpdateTypes.REPLACE;
 					}
-					else if(updateConfigCommand[3].equals("add")){
+					else if(splitCommand[3].equals("add")){
 						configUpdateType = ConfigUpdateTypes.ADD;
 					}
 					else{
@@ -169,12 +307,19 @@ public class Main {
 					throw new InvalidCommandException(command);
 				}
 			}
-			if(command.startsWith("writeToFile ")){
-				String filePathString = command.split(" ")[1];
-				System.out.println(directoryHandler.getFileSize(filePathString));
+			else if(splitCommand[0].equals("writeToFile")){
+				if(splitCommand.length == 3){
+
+				}
+				else{
+					throw new InvalidCommandException(command);
+				}
 			}
-			if(command.equals("exit")){
+			else if(command.equals("exit")){
 				System.exit(0);
+			}
+			else{
+				throw new InvalidCommandException(command);
 			}
 		}
 	}

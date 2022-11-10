@@ -215,41 +215,22 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         }
     }
     @Override
-    public void createRepositories(final String repositoryNames) throws IOException, NonExistentRepositoryException, InvalidParameterException, NoFileAtPathException, BadPathException, InvalidConfigParametersException {
-        List<String> repositoryNameList = List.of(repositoryNames.split("-more-"));
-        for(String repositoryName : repositoryNameList){
-            if(badPathCheck(repositoryName)){
-                throw new BadPathException(repositoryName);
-            }
-            if(nonExistentRepositoryCheck(repositoryName)){
-                throw new NonExistentRepositoryException(repositoryName);
-            }
-            File fileMetadata = new File();
-            fileMetadata.setName(repositoryName);
-            fileMetadata.setMimeType("application/vnd.google-apps.folder");
-            googleDriveClient.files().create(fileMetadata).setFields("id, name, mimeType").execute();
-            createConfig(repositoryName, null);
+    public void createRepository(final String repositoryName, final String configString) throws NonExistentRepositoryException, InvalidParameterException, NoFileAtPathException, IOException, BadPathException, InvalidConfigParametersException {
+        if(badPathCheck(repositoryName)){
+            throw new BadPathException(repositoryName);
         }
+        if(nonExistentRepositoryCheck(repositoryName)){
+            throw new NonExistentRepositoryException(repositoryName);
+        }
+        File fileMetadata = new File();
+        fileMetadata.setName(repositoryName);
+        fileMetadata.setMimeType("application/vnd.google-apps.folder");
+        googleDriveClient.files().create(fileMetadata).setFields("id, name, mimeType").execute();
+        createConfig(repositoryName, configString);
     }
     @Override
-    public void createRepositories(final String repositoryNames, final String configString) throws NonExistentRepositoryException, InvalidParameterException, NoFileAtPathException, IOException, BadPathException, InvalidConfigParametersException {
-        List<String> repositoryNameList = List.of(repositoryNames.split("-more-"));
-        for(String repositoryName : repositoryNameList){
-            if(badPathCheck(repositoryName)){
-                throw new BadPathException(repositoryName);
-            }
-            if(nonExistentRepositoryCheck(repositoryName)){
-                throw new NonExistentRepositoryException(repositoryName);
-            }
-            File fileMetadata = new File();
-            fileMetadata.setName(repositoryName);
-            fileMetadata.setMimeType("application/vnd.google-apps.folder");
-            googleDriveClient.files().create(fileMetadata).setFields("id, name, mimeType").execute();
-            createConfig(repositoryName, configString);
-        }
-    }
-    @Override
-    public void deleteFiles(final String filePathsString) throws NoFileAtPathException, BadPathException, IOException {
+    public void deleteFiles(String filePathsString) throws NoFileAtPathException, BadPathException, IOException {
+        filePathsString = replaceSlashesInPath(filePathsString);
         List<String> filePathsList = List.of(filePathsString.split("-more-"));
         for(String filePathString : filePathsList){
             if(badPathCheck(filePathString)){
@@ -262,10 +243,8 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         }
     }
     @Override
-    public void downloadFiles(String filePathsString, final String downloadDestinationDirectoryString, final boolean overwrite) throws NoFileAtPathException, IOException, BadPathException, MaxFileCountExceededException, InvalidParameterException, NonExistentRepositoryException {
+    public void downloadFiles(String filePathsString, String downloadDestinationDirectoryString, final boolean overwrite) throws NoFileAtPathException, IOException, BadPathException, MaxFileCountExceededException, InvalidParameterException, NonExistentRepositoryException {
         filePathsString = replaceSlashesInPath(filePathsString);
-        String repositoryName = filePathsString.split("/")[0];
-        DirectoryHandlerConfig config = getConfig(repositoryName);
         Path downloadDestinationDirectoryPath;
         if(downloadDestinationDirectoryString == null){
             downloadDestinationDirectoryPath = workingDirectory.resolve("Downloads");
@@ -274,13 +253,16 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             if(badPathCheck(downloadDestinationDirectoryString)){
                 throw new BadPathException(downloadDestinationDirectoryString);
             }
-            if(maxFileCountExceededCheck(config, downloadDestinationDirectoryString)){
-                throw new MaxFileCountExceededException(downloadDestinationDirectoryString);
+            if(Paths.get(downloadDestinationDirectoryString).isAbsolute()){
+                downloadDestinationDirectoryPath = Paths.get(downloadDestinationDirectoryString);
             }
-            downloadDestinationDirectoryPath = Paths.get(downloadDestinationDirectoryString);
+            else{
+                downloadDestinationDirectoryString = replaceSlashesInPath(downloadDestinationDirectoryString);
+                downloadDestinationDirectoryPath = workingDirectory.resolve(Paths.get(downloadDestinationDirectoryString));
+            }
         }
         if(!Files.exists(downloadDestinationDirectoryPath)){
-            Files.createDirectory(downloadDestinationDirectoryPath);
+            Files.createDirectories(downloadDestinationDirectoryPath);
         }
         List<String> filePathsList = List.of(filePathsString.split("-more-"));
         for(String filePathString : filePathsList){
@@ -297,15 +279,9 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             getFile.executeMediaAndDownloadTo(outputStream);
             String fileName = filePathString.substring(filePathString.lastIndexOf("/") + 1);
-            java.io.File destinationFile;
+            java.io.File destinationFile = downloadDestinationDirectoryPath.toFile();
             InputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
             if(overwrite){
-                if (downloadDestinationDirectoryPath.isAbsolute()) {
-                    destinationFile = downloadDestinationDirectoryPath.resolve(fileName).toFile();
-                }
-                else {
-                    destinationFile = workingDirectory.resolve(downloadDestinationDirectoryPath).resolve(fileName).toFile();
-                }
                 FileUtils.copyInputStreamToFile(inputStream, destinationFile);
             }
             else{
@@ -341,7 +317,8 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         return objectMapper.readValue(configJson, DirectoryHandlerConfig.class);
     }
     @Override
-    public long getDirectorySize(final String directoryPathString) throws BadPathException, NoFileAtPathException, IOException {
+    public long getDirectorySize(String directoryPathString) throws BadPathException, NoFileAtPathException, IOException {
+        directoryPathString = replaceSlashesInPath(directoryPathString);
         if(badPathCheck(directoryPathString)){
             throw new BadPathException(directoryPathString);
         }
@@ -368,7 +345,8 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         return directorySize;
     }
     @Override
-    public int getFileCount(final String directoryPathString) throws BadPathException, NoFileAtPathException, IOException {
+    public int getFileCount(String directoryPathString) throws BadPathException, NoFileAtPathException, IOException {
+        directoryPathString = replaceSlashesInPath(directoryPathString);
         if(badPathCheck(directoryPathString)){
             throw new BadPathException(directoryPathString);
         }
@@ -484,7 +462,8 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     }
 
     @Override
-    public long getFileSize(final String filePathString) throws BadPathException, NoFileAtPathException, IOException, MaxFileCountExceededException, InvalidParameterException, NonExistentRepositoryException {
+    public long getFileSize(String filePathString) throws BadPathException, NoFileAtPathException, IOException, MaxFileCountExceededException, InvalidParameterException, NonExistentRepositoryException {
+        filePathString = replaceSlashesInPath(filePathString);
         if(badPathCheck(filePathString)){
             throw new BadPathException(filePathString);
         }
@@ -782,18 +761,25 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         clearTemp();
     }
     @Override
-    public void moveFiles(String filePathsString, final String moveDestinationDirectoryString, boolean overwrite) throws NoFileAtPathException, IOException, BadPathException, InvalidParameterException, NonExistentRepositoryException, MaxFileCountExceededException, MaxRepositorySizeExceededException {
+    public void moveFiles(String filePathsString, String moveDestinationDirectoryString, boolean overwrite) throws NoFileAtPathException, IOException, BadPathException, InvalidParameterException, NonExistentRepositoryException, MaxFileCountExceededException, MaxRepositorySizeExceededException {
         filePathsString = replaceSlashesInPath(filePathsString);
+        moveDestinationDirectoryString = replaceSlashesInPath(moveDestinationDirectoryString);
+        if(badPathCheck(moveDestinationDirectoryString)){
+            throw new BadPathException(moveDestinationDirectoryString);
+        }
+        if(noFileAtPathCheck(moveDestinationDirectoryString)){
+            throw new NoFileAtPathException(moveDestinationDirectoryString);
+        }
         List<String> filePathsList = List.of(filePathsString.split("-more-"));
         for(String filePathString : filePathsList){
-            String repositoryName = filePathString.split("/")[0];
-            DirectoryHandlerConfig config = getConfig(repositoryName);
             if(badPathCheck(filePathString)){
                 throw new BadPathException(filePathString);
             }
             if(noFileAtPathCheck(filePathString)){
                 throw new NoFileAtPathException(filePathString);
             }
+            String repositoryName = filePathString.split("/")[0];
+            DirectoryHandlerConfig config = getConfig(repositoryName);
             if(maxFileCountExceededCheck(config, moveDestinationDirectoryString)){
                 throw new MaxFileCountExceededException(moveDestinationDirectoryString);
             }
@@ -815,7 +801,6 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     @Override
     public void renameFile(String filePathString, final String newFileName) throws NoFileAtPathException, IOException, MaxFileCountExceededException, BadPathException, InvalidParameterException, NonExistentRepositoryException, FileExtensionException {
         filePathString = replaceSlashesInPath(filePathString);
-
         if(badPathCheck(filePathString)){
             throw new BadPathException(filePathString);
         }
@@ -843,8 +828,9 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     }
     //TODO check if this works!
     @Override
-    public void copyFiles(String filePathsString, final String copyDestinationDirectoryString, final boolean overwrite) throws IOException, BadPathException, NoFileAtPathException, InvalidParameterException, NonExistentRepositoryException, MaxFileCountExceededException {
+    public void copyFiles(String filePathsString, String copyDestinationDirectoryString, final boolean overwrite) throws IOException, BadPathException, NoFileAtPathException, InvalidParameterException, NonExistentRepositoryException, MaxFileCountExceededException {
         filePathsString = replaceSlashesInPath(filePathsString);
+        copyDestinationDirectoryString = replaceSlashesInPath(copyDestinationDirectoryString);
         if(badPathCheck(copyDestinationDirectoryString)){
             throw new BadPathException(copyDestinationDirectoryString);
         }
@@ -853,14 +839,14 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         }
         List<String> filePathsList = List.of(filePathsString.split("-more-"));
         for(String filePathString : filePathsList){
-            String repositoryName = filePathString.split("/")[0];
-            DirectoryHandlerConfig config = getConfig(repositoryName);
             if(badPathCheck(filePathString)){
                 throw new BadPathException(filePathString);
             }
             if(noFileAtPathCheck(filePathString)){
                 throw new NoFileAtPathException(filePathString);
             }
+            String repositoryName = filePathString.split("/")[0];
+            DirectoryHandlerConfig config = getConfig(repositoryName);
             if(maxFileCountExceededCheck(config, copyDestinationDirectoryString)){
                 throw new MaxFileCountExceededException(copyDestinationDirectoryString);
             }
@@ -875,8 +861,10 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         Credential credentials = getCredentials(credentialsInputStream, CREDENTIALS_FILE_PATH, HTTP_TRANSPORT, JSON_FACTORY, SCOPES, TOKENS_DIRECTORY_PATH);
         googleDriveClient = new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, credentials).setApplicationName(APPLICATION_NAME).build();
+        credentialsInputStream.close();
     }
-    protected boolean badPathCheck(final String filePathString){
+    protected boolean badPathCheck(String filePathString){
+        filePathString = replaceSlashesInPath(filePathString);
         try{
             Paths.get(filePathString);
         }
@@ -894,7 +882,8 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             Files.createDirectory(workingDirectory.resolve("temp"));
         }
     }
-    protected boolean excludedExtensionsCheck(final DirectoryHandlerConfig config, final String filePathString){
+    protected boolean excludedExtensionsCheck(final DirectoryHandlerConfig config, String filePathString){
+        filePathString = replaceSlashesInPath(filePathString);
         if(config.getExcludedExtensions() != null && config.getExcludedExtensions().size() > 0){
             for(String excludedExtension : config.getExcludedExtensions()){
                 if(filePathString.endsWith(excludedExtension)){
@@ -927,12 +916,13 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         }
         return fileList;
     }
-    protected String getFileIdByPath(final String filePathString) throws IOException, NoFileAtPathException, BadPathException {
+    protected String getFileIdByPath(String filePathString) throws IOException, NoFileAtPathException, BadPathException {
+        filePathString = replaceSlashesInPath(filePathString);
         if(badPathCheck(filePathString)){
             throw new BadPathException(filePathString);
         }
         //List<String> directories = new LinkedList<>(Arrays.asList(filePathString.split("/")));
-        String[] directories = replaceSlashesInPath(filePathString).split("/");
+        String[] directories = filePathString.split("/");
         List<File> currentFileList;
         String currentDirectoryId = "root";
         boolean found;
@@ -981,7 +971,8 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     protected boolean maxRepositorySizeExceededCheck(final DirectoryHandlerConfig config, final String repositoryName, long amountOfBytesToAdd) throws NoFileAtPathException, BadPathException, IOException {
         return getDirectorySize(repositoryName) + amountOfBytesToAdd > config.getMaxRepositorySize();
     }
-    protected boolean noFileAtPathCheck(final String filePathString) throws IOException, BadPathException {
+    protected boolean noFileAtPathCheck(String filePathString) throws IOException, BadPathException {
+        filePathString = replaceSlashesInPath(filePathString);
         try{
             getFileIdByPath(filePathString);
         }

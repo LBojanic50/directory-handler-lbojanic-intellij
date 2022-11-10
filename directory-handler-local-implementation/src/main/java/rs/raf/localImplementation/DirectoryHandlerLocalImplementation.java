@@ -39,24 +39,16 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         super();
     }
     @Override
-    public void copyFiles(final String filePathsString, final String copyDestinationDirectoryString, final boolean overwrite) throws BadPathException, MaxFileCountExceededException, IOException, NoFileAtPathException, NonExistentRepositoryException, InvalidParameterException {
-        String repositoryName = filePathsString.split("/")[0];
-        DirectoryHandlerConfig config = getConfig(repositoryName);
+    public void copyFiles(String filePathsString, String copyDestinationDirectoryString, final boolean overwrite) throws BadPathException, MaxFileCountExceededException, IOException, NoFileAtPathException, NonExistentRepositoryException, InvalidParameterException {
+        filePathsString = replaceSlashesInPath(filePathsString);
+        copyDestinationDirectoryString = replaceSlashesInPath(copyDestinationDirectoryString);
         Path copyDestinationDirectoryPath;
-        if(copyDestinationDirectoryString == null){
-            copyDestinationDirectoryPath = workingDirectory.resolve("Downloads");
+        if(badPathCheck(copyDestinationDirectoryString)){
+            throw new BadPathException(copyDestinationDirectoryString);
         }
-        else{
-            if(badPathCheck(copyDestinationDirectoryString)){
-                throw new BadPathException(copyDestinationDirectoryString);
-            }
-            if(maxFileCountExceededCheck(config, copyDestinationDirectoryString)){
-                throw new MaxFileCountExceededException(copyDestinationDirectoryString);
-            }
-            copyDestinationDirectoryPath = workingDirectory.resolve(Paths.get(copyDestinationDirectoryString));
-        }
-        if(!Files.exists(copyDestinationDirectoryPath)){
-            Files.createDirectory(copyDestinationDirectoryPath);
+        copyDestinationDirectoryPath = workingDirectory.resolve(Paths.get(copyDestinationDirectoryString));
+        if(noFileAtPathCheck(copyDestinationDirectoryString)){
+            Files.createDirectories(copyDestinationDirectoryPath);
         }
         List<String> filePathsList = List.of(filePathsString.split("-more-"));
         for(String filePathString : filePathsList){
@@ -66,16 +58,15 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
             if(noFileAtPathCheck(filePathString)){
                 throw new NoFileAtPathException(filePathString);
             }
+            String repositoryName = filePathString.split("/")[0];
+            DirectoryHandlerConfig config = getConfig(repositoryName);
+            if(maxFileCountExceededCheck(config, copyDestinationDirectoryString)){
+                throw new MaxFileCountExceededException(copyDestinationDirectoryString);
+            }
             String fileName = String.valueOf(Paths.get(filePathString).getFileName());
             Path originalPath = workingDirectory.resolve(Paths.get(filePathString));
             File fileToCopy = originalPath.toFile();
-            File destinationFile;
-            if(copyDestinationDirectoryPath.isAbsolute()){
-                destinationFile = copyDestinationDirectoryPath.resolve(fileName).toFile();
-            }
-            else{
-                destinationFile = workingDirectory.resolve(copyDestinationDirectoryPath).resolve(fileName).toFile();
-            }
+            File destinationFile = copyDestinationDirectoryPath.resolve(fileName).toFile();
             if (overwrite) {
                 if(fileToCopy.isFile()){
                     FileUtils.copyFile(fileToCopy, destinationFile, StandardCopyOption.REPLACE_EXISTING);
@@ -111,10 +102,10 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
                             for(String fileNameNoOverwrite : fileNames){
                                 if(fileName.equals(fileNameNoOverwrite)){
                                     i++;
+                                    suffix = String.valueOf(i);
                                     break;
                                 }
                             }
-                            suffix = String.valueOf(i);
                             boolean exists = false;
                             String newDirectoryName = fileName + suffix;
                             for(String fileNameNoOverwrite : fileNames){
@@ -192,35 +183,19 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         }
     }
     @Override
-    public void createRepositories(final String repositoryNames) throws BadPathException, NonExistentRepositoryException, IOException, InvalidConfigParametersException, InvalidParameterException, NoFileAtPathException {
-        List<String> repositoryNameList = List.of(repositoryNames.split("-more-"));
-        for(String repositoryName : repositoryNameList){
-            if(badPathCheck(repositoryName)){
-                throw new BadPathException(repositoryName);
-            }
-            if(nonExistentRepositoryCheck(repositoryName)){
-                throw new NonExistentRepositoryException(repositoryName);
-            }
-            Files.createDirectory(workingDirectory.resolve(repositoryName));
-            createConfig(repositoryName, null);
+    public void createRepository(final String repositoryName, final String configString) throws BadPathException, NonExistentRepositoryException, IOException, InvalidConfigParametersException, InvalidParameterException, NoFileAtPathException {
+        if(badPathCheck(repositoryName)){
+            throw new BadPathException(repositoryName);
         }
+        if(nonExistentRepositoryCheck(repositoryName)){
+            throw new NonExistentRepositoryException(repositoryName);
+        }
+        Files.createDirectory(workingDirectory.resolve(repositoryName));
+        createConfig(repositoryName, configString);
     }
     @Override
-    public void createRepositories(final String repositoryNames, final String configString) throws BadPathException, NonExistentRepositoryException, IOException, InvalidConfigParametersException, InvalidParameterException, NoFileAtPathException {
-        List<String> repositoryNameList = List.of(repositoryNames.split("-more-"));
-        for(String repositoryName : repositoryNameList){
-            if(badPathCheck(repositoryName)){
-                throw new BadPathException(repositoryName);
-            }
-            if(nonExistentRepositoryCheck(repositoryName)){
-                throw new NonExistentRepositoryException(repositoryName);
-            }
-            Files.createDirectory(workingDirectory.resolve(repositoryName));
-            createConfig(repositoryName, configString);
-        }
-    }
-    @Override
-    public void deleteFiles(final String filePathsString) throws IOException, BadPathException, NoFileAtPathException {
+    public void deleteFiles(String filePathsString) throws IOException, BadPathException, NoFileAtPathException {
+        filePathsString = replaceSlashesInPath(filePathsString);
         List<String> filePathsList = List.of(filePathsString.split("-more-"));
         for(String filePathString : filePathsList){
             if(badPathCheck(filePathString)){
@@ -239,8 +214,95 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         }
     }
     @Override
-    public void downloadFiles(final String filePathsString, final String downloadDestinationDirectoryString, final boolean overwrite) throws NoFileAtPathException, IOException, MaxFileCountExceededException, BadPathException, NonExistentRepositoryException, InvalidParameterException {
-        copyFiles(filePathsString, downloadDestinationDirectoryString, overwrite);
+    public void downloadFiles(String filePathsString, String downloadDestinationDirectoryString, final boolean overwrite) throws NoFileAtPathException, IOException, BadPathException {
+        filePathsString = replaceSlashesInPath(filePathsString);
+        Path downloadDestinationDirectoryPath;
+        if(downloadDestinationDirectoryString == null){
+            downloadDestinationDirectoryPath = workingDirectory.resolve("Downloads");
+        }
+        else{
+            if(badPathCheck(downloadDestinationDirectoryString)){
+                throw new BadPathException(downloadDestinationDirectoryString);
+            }
+            if(Paths.get(downloadDestinationDirectoryString).isAbsolute()){
+                downloadDestinationDirectoryPath = Paths.get(downloadDestinationDirectoryString);
+            }
+            else{
+                downloadDestinationDirectoryString = replaceSlashesInPath(downloadDestinationDirectoryString);
+                downloadDestinationDirectoryPath = workingDirectory.resolve(Paths.get(downloadDestinationDirectoryString));
+            }
+        }
+        if(!Files.exists(downloadDestinationDirectoryPath)){
+            Files.createDirectories(downloadDestinationDirectoryPath);
+        }
+        List<String> filePathsList = List.of(filePathsString.split("-more-"));
+        for(String filePathString : filePathsList){
+            if(badPathCheck(filePathString)){
+                throw new BadPathException(filePathString);
+            }
+            if(noFileAtPathCheck(filePathString)){
+                throw new NoFileAtPathException(filePathString);
+            }
+            String fileName = String.valueOf(Paths.get(filePathString).getFileName());
+            Path originalPath = workingDirectory.resolve(Paths.get(filePathString));
+            File fileToDownload = originalPath.toFile();
+            File destinationFile = downloadDestinationDirectoryPath.resolve(fileName).toFile();
+            if (overwrite) {
+                if(fileToDownload.isFile()){
+                    FileUtils.copyFile(fileToDownload, destinationFile, StandardCopyOption.REPLACE_EXISTING);
+                }
+                else{
+                    FileUtils.copyDirectory(fileToDownload, destinationFile);
+                }
+            }
+            else {
+                if(fileToDownload.isFile()){
+                    String suffix = "";
+                    int i = 0;
+                    while(true){
+                        try{
+                            Files.copy(originalPath, downloadDestinationDirectoryPath.resolve(fileName.substring(0, fileName.indexOf(".")) + suffix + fileName.substring(fileName.indexOf("."))));
+                            break;
+                        }
+                        catch(IOException e){
+                            i++;
+                            suffix = String.valueOf(i);
+                        }
+                    }
+                }
+                else{
+                    if(downloadDestinationDirectoryPath.toFile().listFiles() != null){
+                        List<String> fileNames = new ArrayList<>();
+                        for(File file : Objects.requireNonNull(downloadDestinationDirectoryPath.toFile().listFiles())){
+                            fileNames.add(file.getName());
+                        }
+                        String suffix = "";
+                        int i = 0;
+                        while(true){
+                            for(String fileNameNoOverwrite : fileNames){
+                                if(fileName.equals(fileNameNoOverwrite)){
+                                    i++;
+                                    suffix = String.valueOf(i);
+                                    break;
+                                }
+                            }
+                            boolean exists = false;
+                            String newDirectoryName = fileName + suffix;
+                            for(String fileNameNoOverwrite : fileNames){
+                                if((newDirectoryName).equals(fileNameNoOverwrite)){
+                                    exists = true;
+                                    break;
+                                }
+                            }
+                            if(!exists){
+                                FileUtils.copyDirectory(fileToDownload, downloadDestinationDirectoryPath.resolve(newDirectoryName).toFile());
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
     @Override
     public DirectoryHandlerConfig getConfig(final String repositoryName) throws IOException, NonExistentRepositoryException, InvalidParameterException, NoFileAtPathException, BadPathException {
@@ -253,7 +315,8 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         return objectMapper.readValue(configJson, DirectoryHandlerConfig.class);
     }
     @Override
-    public long getDirectorySize(final String directoryPathString) throws BadPathException, NoFileAtPathException {
+    public long getDirectorySize(String directoryPathString) throws BadPathException, NoFileAtPathException {
+        directoryPathString = replaceSlashesInPath(directoryPathString);
         if(badPathCheck(directoryPathString)){
             throw new BadPathException(directoryPathString);
         }
@@ -263,7 +326,8 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         return FileUtils.sizeOfDirectory(workingDirectory.resolve(Paths.get(directoryPathString)).toFile());
     }
     @Override
-    public int getFileCount(final String directoryPathString) throws BadPathException, NoFileAtPathException {
+    public int getFileCount(String directoryPathString) throws BadPathException, NoFileAtPathException {
+        directoryPathString = replaceSlashesInPath(directoryPathString);
         if(badPathCheck(directoryPathString)){
             throw new BadPathException(directoryPathString);
         }
@@ -327,7 +391,8 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         return localFileList;
     }
     @Override
-    public long getFileSize(final String filePathString) throws BadPathException, NoFileAtPathException {
+    public long getFileSize(String filePathString) throws BadPathException, NoFileAtPathException {
+        filePathString = replaceSlashesInPath(filePathString);
         if(badPathCheck(filePathString)){
             throw new BadPathException(filePathString);
         }
@@ -498,19 +563,16 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         return sortList(foundFiles, sortingType);
     }
     @Override
-    public void moveFiles(final String filePathsString, final String moveDestinationDirectoryString, boolean overwrite) throws IOException, BadPathException, NoFileAtPathException, NonExistentRepositoryException, MaxFileCountExceededException, InvalidParameterException {
-        Path copyDestinationDirectoryPath;
-        if(moveDestinationDirectoryString == null){
-            copyDestinationDirectoryPath = workingDirectory.resolve("Downloads");
+    public void moveFiles(String filePathsString, String moveDestinationDirectoryString, boolean overwrite) throws IOException, BadPathException, NoFileAtPathException, NonExistentRepositoryException, MaxFileCountExceededException, InvalidParameterException {
+        filePathsString = replaceSlashesInPath(filePathsString);
+        moveDestinationDirectoryString = replaceSlashesInPath(moveDestinationDirectoryString);
+        Path moveDestinationDirectoryPath;
+        if(badPathCheck(moveDestinationDirectoryString)){
+            throw new BadPathException(moveDestinationDirectoryString);
         }
-        else{
-            if(badPathCheck(moveDestinationDirectoryString)){
-                throw new BadPathException(moveDestinationDirectoryString);
-            }
-            copyDestinationDirectoryPath = workingDirectory.resolve(Paths.get(moveDestinationDirectoryString));
-        }
-        if(!Files.exists(copyDestinationDirectoryPath)){
-            Files.createDirectory(copyDestinationDirectoryPath);
+        moveDestinationDirectoryPath = workingDirectory.resolve(Paths.get(moveDestinationDirectoryString));
+        if(noFileAtPathCheck(moveDestinationDirectoryString)){
+            Files.createDirectories(moveDestinationDirectoryPath);
         }
         List<String> filePathsList = List.of(filePathsString.split("-more-"));
         for(String filePathString : filePathsList){
@@ -527,23 +589,23 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
             }
             String fileName = String.valueOf(Paths.get(filePathString).getFileName());
             Path originalPath = workingDirectory.resolve(Paths.get(filePathString));
-            File fileToDownload = originalPath.toFile();
-            File destinationFile = copyDestinationDirectoryPath.resolve(fileName).toFile();
+            File fileToMove = originalPath.toFile();
+            File destinationFile = moveDestinationDirectoryPath.resolve(fileName).toFile();
             if (overwrite) {
-                if(fileToDownload.isFile()){
-                    FileUtils.moveFile(fileToDownload, destinationFile, StandardCopyOption.REPLACE_EXISTING);
+                if(fileToMove.isFile()){
+                    FileUtils.moveFile(fileToMove, destinationFile, StandardCopyOption.REPLACE_EXISTING);
                 }
                 else{
-                    FileUtils.moveDirectory(fileToDownload, destinationFile);
+                    FileUtils.moveDirectory(fileToMove, destinationFile);
                 }
             }
             else {
-                if(fileToDownload.isFile()){
+                if(fileToMove.isFile()){
                     String suffix = "";
                     int i = 0;
                     while(true){
                         try{
-                            Files.move(originalPath, copyDestinationDirectoryPath.resolve(fileName.substring(0, fileName.indexOf(".")) + suffix + fileName.substring(fileName.indexOf("."))));
+                            Files.move(originalPath, moveDestinationDirectoryPath.resolve(fileName.substring(0, fileName.indexOf(".")) + suffix + fileName.substring(fileName.indexOf("."))));
                             break;
                         }
                         catch(IOException e){
@@ -553,9 +615,9 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
                     }
                 }
                 else{
-                    if(copyDestinationDirectoryPath.toFile().listFiles() != null){
+                    if(moveDestinationDirectoryPath.toFile().listFiles() != null){
                         List<String> fileNames = new ArrayList<>();
-                        for(File file : Objects.requireNonNull(copyDestinationDirectoryPath.toFile().listFiles())){
+                        for(File file : Objects.requireNonNull(moveDestinationDirectoryPath.toFile().listFiles())){
                             fileNames.add(file.getName());
                         }
                         String suffix = "";
@@ -577,7 +639,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
                                 }
                             }
                             if(!exists){
-                                FileUtils.moveDirectory(fileToDownload, copyDestinationDirectoryPath.resolve(newDirectoryName).toFile());
+                                FileUtils.moveDirectory(fileToMove, moveDestinationDirectoryPath.resolve(newDirectoryName).toFile());
                                 break;
                             }
                         }
@@ -597,7 +659,8 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         }
     }
     @Override
-    public void renameFile(final String filePathString, final String newFileName) throws BadPathException, NoFileAtPathException, NonExistentRepositoryException, IOException, FileExtensionException, InvalidParameterException {
+    public void renameFile(String filePathString, final String newFileName) throws BadPathException, NoFileAtPathException, NonExistentRepositoryException, IOException, FileExtensionException, InvalidParameterException {
+        filePathString = replaceSlashesInPath(filePathString);
         if(badPathCheck(filePathString)){
             throw new BadPathException(filePathString);
         }
@@ -705,7 +768,8 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         FileUtils.writeStringToFile(configPath.toFile(), configJson, "UTF-8");
     }
     @Override
-    public void writeToFile(final String filePathString, final String textToWrite) throws NonExistentRepositoryException, IOException, MaxRepositorySizeExceededException, InvalidParameterException, NoFileAtPathException, BadPathException {
+    public void writeToFile(String filePathString, final String textToWrite) throws NonExistentRepositoryException, IOException, MaxRepositorySizeExceededException, InvalidParameterException, NoFileAtPathException, BadPathException {
+        filePathString = replaceSlashesInPath(filePathString);
         String repositoryName = filePathString.split("/")[0];
         DirectoryHandlerConfig config = getConfig(repositoryName);
         if(maxRepositorySizeExceededCheck(config, repositoryName, textToWrite)){
@@ -719,7 +783,8 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         }
         return instance;
     }
-    protected boolean badPathCheck(final String filePathString){
+    protected boolean badPathCheck(String filePathString){
+        filePathString = replaceSlashesInPath(filePathString);
         try{
             workingDirectory.resolve(Paths.get(filePathString));
         }
@@ -728,7 +793,8 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         }
         return false;
     }
-    protected boolean excludedExtensionsCheck(final DirectoryHandlerConfig config, final String filePathString){
+    protected boolean excludedExtensionsCheck(final DirectoryHandlerConfig config, String filePathString){
+        filePathString = replaceSlashesInPath(filePathString);
         for(String excludedExtension : config.getExcludedExtensions()){
             if(filePathString.endsWith(excludedExtension)){
                 return true;
@@ -812,7 +878,8 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         }
         return new DirectoryHandlerConfig(maxRepositorySize, excludedExtensions, directoriesWithMaxFileCount);
     }
-    protected boolean maxFileCountExceededCheck(final DirectoryHandlerConfig config, final String parentDirectoryPathString) {
+    protected boolean maxFileCountExceededCheck(final DirectoryHandlerConfig config, String parentDirectoryPathString) {
+        parentDirectoryPathString = replaceSlashesInPath(parentDirectoryPathString);
         if (config.getDirectoriesWithMaxFileCount().size() > 0) {
             for(DirectoryWithMaxFileCount directoryWithMaxFileCount : config.getDirectoriesWithMaxFileCount()){
                 if(directoryWithMaxFileCount.getDirectoryName().equals(parentDirectoryPathString)){
@@ -829,11 +896,9 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
     protected boolean maxRepositorySizeExceededCheck(final DirectoryHandlerConfig config, final String repositoryName, final String textToWrite) throws NoFileAtPathException, BadPathException {
         return getDirectorySize(repositoryName) + textToWrite.getBytes().length > config.getMaxRepositorySize();
     }
-    protected boolean noFileAtPathCheck(final String filePathString){
-        if(!Files.exists(workingDirectory.resolve(Paths.get(filePathString)))){
-            return true;
-        }
-        return false;
+    protected boolean noFileAtPathCheck(String filePathString){
+        filePathString = replaceSlashesInPath(filePathString);
+        return !Files.exists(workingDirectory.resolve(Paths.get(filePathString)));
     }
     protected boolean nonExistentRepositoryCheck(final String repositoryName) throws InvalidParameterException, NoFileAtPathException, IOException, BadPathException {
         List<LocalFile> repositories = getFileListInDirectory(null, false, false, true, SortingType.NAME);
