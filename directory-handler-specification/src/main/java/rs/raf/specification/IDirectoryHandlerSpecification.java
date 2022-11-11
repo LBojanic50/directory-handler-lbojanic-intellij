@@ -9,18 +9,21 @@ import java.text.ParseException;
 import java.util.List;
 
 import rs.raf.exception.DirectoryHandlerExceptions.*;
-
+/**
+ * Methods to use when using DirectoryHandler
+ */
 public interface IDirectoryHandlerSpecification<T> {
     /**
      * Copies one or more files at the path(s) specified to the destination directory path with the option of overwriting. Multiple paths are delimited with -more-. Paths are slash delimited and should start with a repository name.
      *
      * @param filePathsString                Path(s) of the file to copy. Multiple paths are delimited with -more-. Paths are slash delimited and should start with a repository name.
      * @param copyDestinationDirectoryString Path to the destination directory. Paths are slash delimited and should start with a repository name.
+     * @param overwrite whether to overwrite existing files or directories.
      * @throws IOException                    for IO reasons.
      * @throws BadPathException               if path is in bad format.
      * @throws NoFileAtPathException          if no file exists at path.
      * @throws MaxFileCountExceededException  if max file count for directory is exceeded.
-     * @throws InvalidParameterException      if config is in bad format.
+     * @throws InvalidParameterException      if parameters are in bad format.
      * @throws NonExistentRepositoryException if path starts with a non-existent repository name.
      */
     void copyFiles(String filePathsString, String copyDestinationDirectoryString, final boolean overwrite) throws IOException, BadPathException, NoFileAtPathException, MaxFileCountExceededException, InvalidParameterException, NonExistentRepositoryException;
@@ -37,7 +40,7 @@ public interface IDirectoryHandlerSpecification<T> {
      * @throws IOException                      for IO reasons.
      * @throws BadPathException                 if path is in bad format.
      * @throws NoFileAtPathException            if no file exists at path.
-     * @throws InvalidParameterException        if config is in bad format.
+     * @throws InvalidParameterException        if parameters are in bad format.
      * @throws NonExistentRepositoryException   if path starts with a non-existent repository name.
      * @throws InvalidConfigParametersException if config has invalid parameters.
      */
@@ -51,7 +54,7 @@ public interface IDirectoryHandlerSpecification<T> {
      * @throws BadPathException               if path is in bad format.
      * @throws NoFileAtPathException          if no file exists at path.
      * @throws MaxFileCountExceededException  if max file count for directory is exceeded.
-     * @throws InvalidParameterException      if config is in bad format.
+     * @throws InvalidParameterException      if parameters are in bad format.
      * @throws NonExistentRepositoryException if path starts with a non-existent repository name.
      */
     void createDirectories(String directoryPathsString) throws NoFileAtPathException, IOException, MaxFileCountExceededException, BadPathException, NonExistentRepositoryException, InvalidParameterException;
@@ -64,9 +67,10 @@ public interface IDirectoryHandlerSpecification<T> {
      * @throws BadPathException               if path is in bad format.
      * @throws NoFileAtPathException          if no file exists at path.
      * @throws MaxFileCountExceededException  if max file count for directory is exceeded.
-     * @throws InvalidParameterException      if config is in bad format.
+     * @throws InvalidParameterException      if parameters are in bad format.
      * @throws NonExistentRepositoryException if path starts with a non-existent repository name.
      * @throws FileExtensionException         if file has an extension that is forbidden in the config file.
+     * @throws MaxRepositorySizeExceededException if max repository size is exceeded.
      */
     void createFiles(String filePathsString) throws IOException, BadPathException, MaxFileCountExceededException, FileExtensionException, MaxRepositorySizeExceededException, NoFileAtPathException, InvalidParameterException, NonExistentRepositoryException;
     /**
@@ -82,8 +86,9 @@ public interface IDirectoryHandlerSpecification<T> {
      * @throws IOException                    for IO reasons.
      * @throws BadPathException               if path is in bad format.
      * @throws NoFileAtPathException          if no file exists at path.
-     * @throws InvalidParameterException      if config is in bad format.
+     * @throws InvalidParameterException      if parameters are in bad format.
      * @throws NonExistentRepositoryException if path starts with a non-existent repository name.
+     * @throws InvalidConfigParametersException if config is in bad format.
      */
     void createRepository(final String repositoryName, final String configString) throws NonExistentRepositoryException, InvalidParameterException, NoFileAtPathException, IOException, BadPathException, InvalidConfigParametersException;
     /**
@@ -105,7 +110,7 @@ public interface IDirectoryHandlerSpecification<T> {
      * @throws BadPathException               if path is in bad format.
      * @throws NoFileAtPathException          if no file exists at path.
      * @throws MaxFileCountExceededException  if max file count for directory is exceeded.
-     * @throws InvalidParameterException      if config is in bad format.
+     * @throws InvalidParameterException      if parameters are in bad format.
      * @throws NonExistentRepositoryException if path starts with a non-existent repository name.
      */
     void downloadFiles(String filePathsString, String downloadDestinationDirectoryString, boolean overwrite) throws NoFileAtPathException, IOException, MaxFileCountExceededException, BadPathException, InvalidParameterException, NonExistentRepositoryException;
@@ -118,7 +123,7 @@ public interface IDirectoryHandlerSpecification<T> {
      * @throws BadPathException               if path is in bad format.
      * @throws NoFileAtPathException          if no file exists at path.
      * @throws MaxFileCountExceededException  if max file count for directory is exceeded.
-     * @throws InvalidParameterException      if config is in bad format.
+     * @throws InvalidParameterException      if parameters are in bad format.
      * @throws NonExistentRepositoryException if path starts with a non-existent repository name.
      */
     DirectoryHandlerConfig getConfig(final String repositoryName) throws NoFileAtPathException, IOException, MaxFileCountExceededException, BadPathException, NonExistentRepositoryException, InvalidParameterException;
@@ -150,11 +155,11 @@ public interface IDirectoryHandlerSpecification<T> {
      * @param includeFiles        Whether to include files.
      * @param includeDirectories  Whether to include directories.
      * @param sortingType         SortingType enum element of the method of sorting to apply. Possible sorting types (SortingType): NONE, NAME, DATE_CREATED, DATE_MODIFIED, SIZE
-     * @return List<T> of files in search result
+     * @return List of files in search result
      * @throws IOException               for IO reasons.
      * @throws BadPathException          if path is in bad format.
      * @throws NoFileAtPathException     if no file exists at path.
-     * @throws InvalidParameterException if config is in bad format.
+     * @throws InvalidParameterException if parameters are in bad format.
      */
     List<T> getFileListInDirectory(final String directoryPathString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws InvalidParameterException, IOException, BadPathException, NoFileAtPathException;
     /**
@@ -162,6 +167,12 @@ public interface IDirectoryHandlerSpecification<T> {
      *
      * @param filePathString Path to the file of which to get the size of. Paths are slash delimited and should start with a repository name.
      * @return long size of file in bytes.
+     * @throws IOException                    for IO reasons.
+     * @throws BadPathException               if path is in bad format.
+     * @throws NoFileAtPathException          if no file exists at path.
+     * @throws MaxFileCountExceededException  if max file count for directory is exceeded.
+     * @throws InvalidParameterException      if parameters are in bad format.
+     * @throws NonExistentRepositoryException if path starts with a non-existent repository name.
      */
     long getFileSize(String filePathString) throws MaxFileCountExceededException, BadPathException, NoFileAtPathException, IOException, InvalidParameterException, NonExistentRepositoryException;
     /**
@@ -176,11 +187,11 @@ public interface IDirectoryHandlerSpecification<T> {
      * @param includeFiles        whether to include files.
      * @param includeDirectories  whether to include directories.
      * @param sortingType         SortingType enum element of the method of sorting to apply. Possible sorting types (SortingType): NONE, NAME, DATE_CREATED, DATE_MODIFIED, SIZE.
-     * @return List<T> of files in search result.
+     * @return List of files in search result.
      * @throws IOException               for IO reasons.
      * @throws BadPathException          if path is in bad format.
      * @throws NoFileAtPathException     if no file exists at path.
-     * @throws InvalidParameterException if config is in bad format.
+     * @throws InvalidParameterException if parameters are in bad format.
      * @throws ParseException            if unable to parse strings as dates.
      */
     List<T> getFilesForDateRange(final String directoryPathString, final String startDate, final String endDate, final boolean dateCreated, final boolean dateModified, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws InvalidParameterException, ParseException, NoFileAtPathException, IOException, BadPathException;
@@ -193,11 +204,11 @@ public interface IDirectoryHandlerSpecification<T> {
      * @param includeFiles                   whether to include files.
      * @param includeDirectories             whether to include directories.
      * @param sortingType                    SortingType enum element of the method of sorting to apply. Possible sorting types (SortingType): NONE, NAME, DATE_CREATED, DATE_MODIFIED, SIZE.
-     * @return List<T> of files in search result.
+     * @return List of files in search result.
      * @throws IOException               for IO reasons.
      * @throws BadPathException          if path is in bad format.
      * @throws NoFileAtPathException     if no file exists at path.
-     * @throws InvalidParameterException if config is in bad format.
+     * @throws InvalidParameterException if parameters are in bad format.
      */
     List<T> getFilesForExcludedExtensions(final String directoryPathString, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws InvalidParameterException, NoFileAtPathException, IOException, BadPathException;
     /**
@@ -209,11 +220,11 @@ public interface IDirectoryHandlerSpecification<T> {
      * @param includeFiles           whether to include files.
      * @param includeDirectories     whether to include directories.
      * @param sortingType            SortingType enum element of the method of sorting to apply. Possible sorting types (SortingType): NONE, NAME, DATE_CREATED, DATE_MODIFIED, SIZE.
-     * @return List<T> of files in search result.
+     * @return List of files in search result.
      * @throws IOException               for IO reasons.
      * @throws BadPathException          if path is in bad format.
      * @throws NoFileAtPathException     if no file exists at path.
-     * @throws InvalidParameterException if config is in bad format.
+     * @throws InvalidParameterException if parameters are in bad format.
      */
     List<T> getFilesForExtensions(final String directoryPathString, final String searchExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws InvalidParameterException, NoFileAtPathException, IOException, BadPathException;
     /**
@@ -226,11 +237,11 @@ public interface IDirectoryHandlerSpecification<T> {
      * @param includeFiles                   whether to include files.
      * @param includeDirectories             whether to include directories.
      * @param sortingType                    SortingType enum element of the method of sorting to apply. Possible sorting types (SortingType): NONE, NAME, DATE_CREATED, DATE_MODIFIED, SIZE.
-     * @return List<T> of files in search result.
+     * @return List of files in search result.
      * @throws IOException               for IO reasons.
      * @throws BadPathException          if path is in bad format.
      * @throws NoFileAtPathException     if no file exists at path.
-     * @throws InvalidParameterException if config is in bad format.
+     * @throws InvalidParameterException if parameters are in bad format.
      */
     List<T> getFilesForExtensionsAndExcludedExtensions(final String directoryPathString, final String searchExtensionsString, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws InvalidParameterException, NoFileAtPathException, IOException, BadPathException;
     /**
@@ -242,11 +253,11 @@ public interface IDirectoryHandlerSpecification<T> {
      * @param includeFiles        whether to include files.
      * @param includeDirectories  whether to include directories.
      * @param sortingType         SortingType enum element of the method of sorting to apply. Possible sorting types (SortingType): NONE, NAME, DATE_CREATED, DATE_MODIFIED, SIZE.
-     * @return List<T> of files in search result.
+     * @return List of files in search result.
      * @throws IOException               for IO reasons.
      * @throws BadPathException          if path is in bad format.
      * @throws NoFileAtPathException     if no file exists at path.
-     * @throws InvalidParameterException if config is in bad format.
+     * @throws InvalidParameterException if parameters are in bad format.
      */
     List<T> getFilesForSearchName(final String directoryPathString, final String search, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws InvalidParameterException, NoFileAtPathException, IOException, BadPathException;
     /**
@@ -259,11 +270,11 @@ public interface IDirectoryHandlerSpecification<T> {
      * @param includeFiles                   whether to include files.
      * @param includeDirectories             whether to include directories.
      * @param sortingType                    SortingType enum element of the method of sorting to apply. Possible sorting types (SortingType): NONE, NAME, DATE_CREATED, DATE_MODIFIED, SIZE.
-     * @return List<T> of files in search result.
+     * @return List of files in search result.
      * @throws IOException               for IO reasons.
      * @throws BadPathException          if path is in bad format.
      * @throws NoFileAtPathException     if no file exists at path.
-     * @throws InvalidParameterException if config is in bad format.
+     * @throws InvalidParameterException if parameters are in bad format.
      */
     List<T> getFilesForSearchNameAndExcludedExtensions(final String directoryPathString, final String search, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws InvalidParameterException, NoFileAtPathException, IOException, BadPathException;
     /**
@@ -276,11 +287,11 @@ public interface IDirectoryHandlerSpecification<T> {
      * @param includeFiles           whether to include files.
      * @param includeDirectories     whether to include directories.
      * @param sortingType            SortingType enum element of the method of sorting to apply. Possible sorting types (SortingType): NONE, NAME, DATE_CREATED, DATE_MODIFIED, SIZE.
-     * @return List<T> of files in search result.
+     * @return List of files in search result.
      * @throws IOException               for IO reasons.
      * @throws BadPathException          if path is in bad format.
      * @throws NoFileAtPathException     if no file exists at path.
-     * @throws InvalidParameterException if config is in bad format.
+     * @throws InvalidParameterException if parameters are in bad format.
      */
     List<T> getFilesForSearchNameAndExtensions(final String directoryPathString, final String search, final String searchExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws InvalidParameterException, NoFileAtPathException, IOException, BadPathException;
     /**
@@ -294,11 +305,11 @@ public interface IDirectoryHandlerSpecification<T> {
      * @param includeFiles                   whether to include files.
      * @param includeDirectories             whether to include directories.
      * @param sortingType                    SortingType enum element of the method of sorting to apply. Possible sorting types (SortingType): NONE, NAME, DATE_CREATED, DATE_MODIFIED, SIZE.
-     * @return List<T> of files in search result.
+     * @return List of files in search result.
      * @throws IOException               for IO reasons.
      * @throws BadPathException          if path is in bad format.
      * @throws NoFileAtPathException     if no file exists at path.
-     * @throws InvalidParameterException if config is in bad format.
+     * @throws InvalidParameterException if parameters are in bad format.
      */
     List<T> getFilesForSearchNameAndExtensionsAndExcludedExtensions(final String directoryPathString, final String search, final String searchExtensionsString, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws InvalidParameterException, NoFileAtPathException, IOException, BadPathException;
     /**
@@ -310,11 +321,11 @@ public interface IDirectoryHandlerSpecification<T> {
      * @param includeFiles        whether to include files.
      * @param includeDirectories  whether to include directories.
      * @param sortingType         SortingType enum element of the method of sorting to apply. Possible sorting types (SortingType): NONE, NAME, DATE_CREATED, DATE_MODIFIED, SIZE.
-     * @return List<T> of files in search result.
+     * @return List of files in search result.
      * @throws IOException               for IO reasons.
      * @throws BadPathException          if path is in bad format.
      * @throws NoFileAtPathException     if no file exists at path.
-     * @throws InvalidParameterException if config is in bad format.
+     * @throws InvalidParameterException if parameters are in bad format.
      */
     List<T> getFilesWithNames(final String directoryPathString, final String searchListString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws InvalidParameterException, NoFileAtPathException, IOException, BadPathException;
     /**
@@ -322,18 +333,21 @@ public interface IDirectoryHandlerSpecification<T> {
      *
      * @param filePathsString                Path(s) of the file to move. Multiple paths are delimited with -more-. Paths are slash delimited and should start with a repository name.
      * @param moveDestinationDirectoryString Path to the destination directory. Paths are slash delimited and should start with a repository name.
+     * @param overwrite whether to overwrite existing files or directories.
      * @throws IOException                    for IO reasons.
      * @throws BadPathException               if path is in bad format.
      * @throws NoFileAtPathException          if no file exists at path.
      * @throws MaxFileCountExceededException  if max file count for directory is exceeded.
-     * @throws InvalidParameterException      if config is in bad format.
+     * @throws InvalidParameterException      if parameters are in bad format.
      * @throws NonExistentRepositoryException if path starts with a non-existent repository name.
+     * @throws MaxRepositorySizeExceededException if max repository size is exceeded.
      */
     void moveFiles(String filePathsString, String moveDestinationDirectoryString, boolean overwrite) throws NoFileAtPathException, IOException, BadPathException, InvalidParameterException, NonExistentRepositoryException, MaxFileCountExceededException, MaxRepositorySizeExceededException;
     /**
      * Prints the config specified.
      *
      * @param directoryHandlerConfig config to print.
+     * @throws IOException for IO reasons.
      */
     void printConfig(final DirectoryHandlerConfig directoryHandlerConfig) throws IOException;
     /**
@@ -351,7 +365,7 @@ public interface IDirectoryHandlerSpecification<T> {
      * @throws IOException                    if path is in bad format.
      * @throws MaxFileCountExceededException  if no file exists at path.
      * @throws BadPathException               if max file count for directory is exceeded.
-     * @throws InvalidParameterException      if config is in bad format.
+     * @throws InvalidParameterException      if parameters are in bad format.
      * @throws NonExistentRepositoryException if path starts with a non-existent repository name.
      * @throws FileExtensionException         if config has invalid parameters.
      *                                        NoFileAtPathException, IOException, MaxFileCountExceededException, BadPathException, InvalidParameterException, NonExistentRepositoryException, FileExtensionException;
@@ -367,16 +381,17 @@ public interface IDirectoryHandlerSpecification<T> {
      *                       directoriesWithMaxFileCount is a comma delimited list of - delimited string which represent a key value pair of a directory name and the max file count that would be allowed to store inside. Example: dir1-25,dir2-50
      *                       Full config string example: maxRepositorySize=2048;excludedExtensions=jar,zip;directoriesWithMaxFileCount=exampleDir1-75,exampleDir2-100
      *                       Not all parameters have to be specified. Can be parsed as null in order to create a default config with maxRepositorySize=1073741824.
+     * @param configUpdateType ConfigUpdateTypes enum element of the method of config updating to apply. Possible sorting types (SortingType): REPLACE (replaces existing config values), ADD (adds to existing config values).
      * @throws IOException                               for IO reasons.
      * @throws BadPathException                          if path is in bad format.
      * @throws NoFileAtPathException                     if no file exists at path.
      * @throws MaxFileCountExceededException             if max file count for directory is exceeded.
-     * @throws InvalidParameterException                 if config is in bad format.
+     * @throws InvalidParameterException                 if parameters are in bad format.
      * @throws NonExistentRepositoryException            if path starts with a non-existent repository name.
      * @throws InvalidConfigParametersException          if config has invalid parameters.
      * @throws ValueInConfigCannotBeLessThanOneException if value specified in config is less than one.
      */
-    void updateConfig(final String repositoryName, final String configString, final ConfigUpdateTypes updateType) throws InvalidParameterException, NoFileAtPathException, NonExistentRepositoryException, IOException, MaxFileCountExceededException, BadPathException, InvalidConfigParametersException, ValueInConfigCannotBeLessThanOneException;
+    void updateConfig(final String repositoryName, final String configString, final ConfigUpdateTypes configUpdateType) throws InvalidParameterException, NoFileAtPathException, NonExistentRepositoryException, IOException, MaxFileCountExceededException, BadPathException, InvalidConfigParametersException, ValueInConfigCannotBeLessThanOneException;
     /**
      * Writes the specified text to specified file path. Paths are slash delimited and should start with a repository name.
      *
