@@ -24,7 +24,8 @@ public class LocalFile {
     private BasicFileAttributes fileMetadata;
     /**
      * Local file constructor with java.io.File parameter.
-     * @param file java.io.File
+     * @param file java.io.File.
+     * @throws IOException for IO reasons.
      */
     public LocalFile(File file) throws IOException {
         this.file = file;

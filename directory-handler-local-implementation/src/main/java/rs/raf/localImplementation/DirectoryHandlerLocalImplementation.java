@@ -695,7 +695,6 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.writeValue(configPath.toFile(), directoryHandlerConfig);
     }
-    //TODO print config?
     @Override
     public void updateConfig(final String repositoryName, final String configString, final ConfigUpdateTypes configUpdateType) throws NonExistentRepositoryException, IOException, InvalidConfigParametersException, ValueInConfigCannotBeLessThanOneException, NoFileAtPathException, BadPathException, InvalidParameterException {
         DirectoryHandlerConfig currentConfig = getConfig(repositoryName);

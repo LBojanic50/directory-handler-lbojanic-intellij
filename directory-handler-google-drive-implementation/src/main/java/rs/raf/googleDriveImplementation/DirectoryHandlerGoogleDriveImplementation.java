@@ -754,7 +754,6 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             throw new MaxRepositorySizeExceededException(repositoryName);
         }
         FileUtils.writeStringToFile(tempFile, textToWrite, "UTF-8", true);
-        //TODO maybe rollback to media/text
         FileContent mediaContent = new FileContent("media/text", tempFile);
         googleDriveClient.files().create(fileMetadata, mediaContent).setFields("id, name, parents, mimeType").execute();
         deleteFiles(filePathString);
@@ -826,7 +825,6 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         uploadFile(filePathString, renamedFile);
         clearTemp();
     }
-    //TODO check if this works!
     @Override
     public void copyFiles(String filePathsString, String copyDestinationDirectoryString, final boolean overwrite) throws IOException, BadPathException, NoFileAtPathException, InvalidParameterException, NonExistentRepositoryException, MaxFileCountExceededException {
         filePathsString = replaceSlashesInPath(filePathsString);

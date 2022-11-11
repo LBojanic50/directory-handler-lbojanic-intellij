@@ -9,6 +9,7 @@ import java.text.ParseException;
 import java.util.List;
 
 import rs.raf.exception.DirectoryHandlerExceptions.*;
+
 /**
  * Methods to use when using DirectoryHandler
  */
@@ -18,7 +19,7 @@ public interface IDirectoryHandlerSpecification<T> {
      *
      * @param filePathsString                Path(s) of the file to copy. Multiple paths are delimited with -more-. Paths are slash delimited and should start with a repository name.
      * @param copyDestinationDirectoryString Path to the destination directory. Paths are slash delimited and should start with a repository name.
-     * @param overwrite whether to overwrite existing files or directories.
+     * @param overwrite                      whether to overwrite existing files or directories.
      * @throws IOException                    for IO reasons.
      * @throws BadPathException               if path is in bad format.
      * @throws NoFileAtPathException          if no file exists at path.
@@ -63,13 +64,13 @@ public interface IDirectoryHandlerSpecification<T> {
      * If parent directories don't exist, they will be created in accordance with config rules.
      *
      * @param filePathsString Path(s) of the files to create. Multiple paths are delimited with -more-. Paths are slash delimited and should start with a repository name.
-     * @throws IOException                    for IO reasons.
-     * @throws BadPathException               if path is in bad format.
-     * @throws NoFileAtPathException          if no file exists at path.
-     * @throws MaxFileCountExceededException  if max file count for directory is exceeded.
-     * @throws InvalidParameterException      if parameters are in bad format.
-     * @throws NonExistentRepositoryException if path starts with a non-existent repository name.
-     * @throws FileExtensionException         if file has an extension that is forbidden in the config file.
+     * @throws IOException                        for IO reasons.
+     * @throws BadPathException                   if path is in bad format.
+     * @throws NoFileAtPathException              if no file exists at path.
+     * @throws MaxFileCountExceededException      if max file count for directory is exceeded.
+     * @throws InvalidParameterException          if parameters are in bad format.
+     * @throws NonExistentRepositoryException     if path starts with a non-existent repository name.
+     * @throws FileExtensionException             if file has an extension that is forbidden in the config file.
      * @throws MaxRepositorySizeExceededException if max repository size is exceeded.
      */
     void createFiles(String filePathsString) throws IOException, BadPathException, MaxFileCountExceededException, FileExtensionException, MaxRepositorySizeExceededException, NoFileAtPathException, InvalidParameterException, NonExistentRepositoryException;
@@ -83,11 +84,11 @@ public interface IDirectoryHandlerSpecification<T> {
      *                       directoriesWithMaxFileCount is a comma delimited list of - delimited string which represent a key value pair of a directory name and the max file count that would be allowed to store inside. Example: dir1-25,dir2-50
      *                       Full config string example: maxRepositorySize=2048;excludedExtensions=jar,zip;directoriesWithMaxFileCount=exampleDir1-75,exampleDir2-100
      *                       Not all parameters have to be specified. Can be parsed as null in order to create a default config with maxRepositorySize=1073741824.
-     * @throws IOException                    for IO reasons.
-     * @throws BadPathException               if path is in bad format.
-     * @throws NoFileAtPathException          if no file exists at path.
-     * @throws InvalidParameterException      if parameters are in bad format.
-     * @throws NonExistentRepositoryException if path starts with a non-existent repository name.
+     * @throws IOException                      for IO reasons.
+     * @throws BadPathException                 if path is in bad format.
+     * @throws NoFileAtPathException            if no file exists at path.
+     * @throws InvalidParameterException        if parameters are in bad format.
+     * @throws NonExistentRepositoryException   if path starts with a non-existent repository name.
      * @throws InvalidConfigParametersException if config is in bad format.
      */
     void createRepository(final String repositoryName, final String configString) throws NonExistentRepositoryException, InvalidParameterException, NoFileAtPathException, IOException, BadPathException, InvalidConfigParametersException;
@@ -333,13 +334,13 @@ public interface IDirectoryHandlerSpecification<T> {
      *
      * @param filePathsString                Path(s) of the file to move. Multiple paths are delimited with -more-. Paths are slash delimited and should start with a repository name.
      * @param moveDestinationDirectoryString Path to the destination directory. Paths are slash delimited and should start with a repository name.
-     * @param overwrite whether to overwrite existing files or directories.
-     * @throws IOException                    for IO reasons.
-     * @throws BadPathException               if path is in bad format.
-     * @throws NoFileAtPathException          if no file exists at path.
-     * @throws MaxFileCountExceededException  if max file count for directory is exceeded.
-     * @throws InvalidParameterException      if parameters are in bad format.
-     * @throws NonExistentRepositoryException if path starts with a non-existent repository name.
+     * @param overwrite                      whether to overwrite existing files or directories.
+     * @throws IOException                        for IO reasons.
+     * @throws BadPathException                   if path is in bad format.
+     * @throws NoFileAtPathException              if no file exists at path.
+     * @throws MaxFileCountExceededException      if max file count for directory is exceeded.
+     * @throws InvalidParameterException          if parameters are in bad format.
+     * @throws NonExistentRepositoryException     if path starts with a non-existent repository name.
      * @throws MaxRepositorySizeExceededException if max repository size is exceeded.
      */
     void moveFiles(String filePathsString, String moveDestinationDirectoryString, boolean overwrite) throws NoFileAtPathException, IOException, BadPathException, InvalidParameterException, NonExistentRepositoryException, MaxFileCountExceededException, MaxRepositorySizeExceededException;
@@ -354,6 +355,7 @@ public interface IDirectoryHandlerSpecification<T> {
      * Prints the list of files specified.
      *
      * @param fileList file list to print.
+     * @throws IOException for IO reasons.
      */
     void printFileList(final List<T> fileList) throws IOException;
     /**
@@ -374,13 +376,13 @@ public interface IDirectoryHandlerSpecification<T> {
     /**
      * Updates the config of specified repository with the specified config.
      *
-     * @param repositoryName name of the repository whose config to update.
-     * @param configString   String representation of custom config. Parameters in config string are delimited by ;. Parameters are split into keys and values by =. Possible parameter keys: maxRepositorySize, excludedExtensions, directoriesWithMaxFileCount.
-     *                       maxRepositorySize is a long of bytes that is the maximum size of specified repository. Example: 1024.
-     *                       excludedExtensions is a comma delimited string of extensions which the program will not allow files to be created with. Example: exe,bat
-     *                       directoriesWithMaxFileCount is a comma delimited list of - delimited string which represent a key value pair of a directory name and the max file count that would be allowed to store inside. Example: dir1-25,dir2-50
-     *                       Full config string example: maxRepositorySize=2048;excludedExtensions=jar,zip;directoriesWithMaxFileCount=exampleDir1-75,exampleDir2-100
-     *                       Not all parameters have to be specified. Can be parsed as null in order to create a default config with maxRepositorySize=1073741824.
+     * @param repositoryName   name of the repository whose config to update.
+     * @param configString     String representation of custom config. Parameters in config string are delimited by ;. Parameters are split into keys and values by =. Possible parameter keys: maxRepositorySize, excludedExtensions, directoriesWithMaxFileCount.
+     *                         maxRepositorySize is a long of bytes that is the maximum size of specified repository. Example: 1024.
+     *                         excludedExtensions is a comma delimited string of extensions which the program will not allow files to be created with. Example: exe,bat
+     *                         directoriesWithMaxFileCount is a comma delimited list of - delimited string which represent a key value pair of a directory name and the max file count that would be allowed to store inside. Example: dir1-25,dir2-50
+     *                         Full config string example: maxRepositorySize=2048;excludedExtensions=jar,zip;directoriesWithMaxFileCount=exampleDir1-75,exampleDir2-100
+     *                         Not all parameters have to be specified. Can be parsed as null in order to create a default config with maxRepositorySize=1073741824.
      * @param configUpdateType ConfigUpdateTypes enum element of the method of config updating to apply. Possible sorting types (SortingType): REPLACE (replaces existing config values), ADD (adds to existing config values).
      * @throws IOException                               for IO reasons.
      * @throws BadPathException                          if path is in bad format.
@@ -397,6 +399,14 @@ public interface IDirectoryHandlerSpecification<T> {
      *
      * @param filePathString Path to the file. Paths are slash delimited and should start with a repository name.
      * @param textToWrite    text to write.
+     * @throws IOException                        for IO reasons.
+     * @throws BadPathException                   if path is in bad format.
+     * @throws NoFileAtPathException              if no file exists at path.
+     * @throws MaxFileCountExceededException      if max file count for directory is exceeded.
+     * @throws InvalidParameterException          if parameters are in bad format.
+     * @throws NonExistentRepositoryException     if path starts with a non-existent repository name.
+     * @throws FileExtensionException             if file has an extension that is forbidden in the config file.
+     * @throws MaxRepositorySizeExceededException if max repository size is exceeded.
      */
     void writeToFile(String filePathString, final String textToWrite) throws BadPathException, NoFileAtPathException, IOException, MaxFileCountExceededException, InvalidParameterException, NonExistentRepositoryException, FileExtensionException, MaxRepositorySizeExceededException;
 }
