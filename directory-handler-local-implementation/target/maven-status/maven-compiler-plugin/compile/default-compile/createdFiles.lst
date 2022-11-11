@@ -1,8 +1,6 @@
-rs\raf\util\Comparators$ModificationDateComparator.class
-rs\raf\util\Comparators$SizeComparator.class
-rs\raf\util\Comparators$CreationDateComparator.class
-rs\raf\util\Comparators$NameComparator.class
 rs\raf\localImplementation\DirectoryHandlerLocalImplementation.class
-rs\raf\localImplementation\DirectoryHandlerManager.class
-rs\raf\util\Comparators.class
-rs\raf\model\DirectoryHandlerFile.class
+rs\raf\util\LocalComparators$SizeComparator.class
+rs\raf\util\LocalComparators$CreationDateComparator.class
+rs\raf\util\LocalComparators$NameComparator.class
+rs\raf\util\LocalComparators.class
+rs\raf\util\LocalComparators$ModificationDateComparator.class

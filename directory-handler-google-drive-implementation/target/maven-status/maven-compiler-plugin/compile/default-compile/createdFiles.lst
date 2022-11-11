@@ -1,1 +1,6 @@
 rs\raf\googleDriveImplementation\DirectoryHandlerGoogleDriveImplementation.class
+rs\raf\util\GoogleDriveComparators$CreationDateComparator.class
+rs\raf\util\GoogleDriveComparators$ModificationDateComparator.class
+rs\raf\util\GoogleDriveComparators$NameComparator.class
+rs\raf\util\GoogleDriveComparators.class
+rs\raf\util\GoogleDriveComparators$SizeComparator.class
