@@ -114,7 +114,7 @@ public class Main {
 				System.out.println("Done");
 			}
 			else if(splitCommand[0].equals("downloadFiles")){
-				if(splitCommand.length == 3){
+				if(splitCommand.length == 4){
 					if(splitCommand[3].equals("true")){
 						directoryHandler.downloadFiles(splitCommand[1], splitCommand[2], true);
 					}
@@ -576,34 +576,34 @@ public class Main {
 					boolean includeFiles;
 					boolean includeDirectories;
 					SortingType sortingType;
-					if(splitCommand[3].equals("true")){
+					if(splitCommand[5].equals("true")){
 						recursive = true;
 					}
-					else if(splitCommand[3].equals("false")){
+					else if(splitCommand[5].equals("false")){
 						recursive = false;
 					}
 					else{
 						throw new InvalidCommandException(command);
 					}
-					if(splitCommand[4].equals("true")){
+					if(splitCommand[6].equals("true")){
 						includeFiles = true;
 					}
-					else if(splitCommand[4].equals("false")){
+					else if(splitCommand[6].equals("false")){
 						includeFiles = false;
 					}
 					else{
 						throw new InvalidCommandException(command);
 					}
-					if(splitCommand[5].equals("true")){
+					if(splitCommand[7].equals("true")){
 						includeDirectories = true;
 					}
-					else if(splitCommand[5].equals("false")){
+					else if(splitCommand[7].equals("false")){
 						includeDirectories = false;
 					}
 					else{
 						throw new InvalidCommandException(command);
 					}
-					sortingType = switch (splitCommand[6]) {
+					sortingType = switch (splitCommand[8]) {
 						case "none" -> SortingType.NONE;
 						case "name" -> SortingType.NAME;
 						case "dateCreated" -> SortingType.DATE_CREATED;
@@ -611,7 +611,7 @@ public class Main {
 						case "size" -> SortingType.SIZE;
 						default -> throw new InvalidCommandException(command);
 					};
-					directoryHandler.printFileList(directoryHandler.getFilesWithNames(splitCommand[1], splitCommand[2], recursive, includeFiles, includeDirectories, sortingType));
+					directoryHandler.printFileList(directoryHandler.getFilesForSearchNameAndExtensionsAndExcludedExtensions(splitCommand[1], splitCommand[2], splitCommand[3], splitCommand[4], recursive, includeFiles, includeDirectories, sortingType));
 				}
 				else{
 					throw new InvalidCommandException(command);
@@ -619,7 +619,7 @@ public class Main {
 				System.out.println("Done");
 			}
 			else if(splitCommand[0].equals("getFilesWithNames")){
-				if(splitCommand.length == 7){
+				if(splitCommand.length == 9){
 					boolean recursive;
 					boolean includeFiles;
 					boolean includeDirectories;
@@ -659,7 +659,7 @@ public class Main {
 						case "size" -> SortingType.SIZE;
 						default -> throw new InvalidCommandException(command);
 					};
-					directoryHandler.printFileList(directoryHandler.getFilesForSearchName(splitCommand[1], splitCommand[2], recursive, includeFiles, includeDirectories, sortingType));
+					directoryHandler.printFileList(directoryHandler.getFilesWithNames(splitCommand[1], splitCommand[2], recursive, includeFiles, includeDirectories, sortingType));
 				}
 				else{
 					throw new InvalidCommandException(command);
