@@ -1,4 +1,5 @@
-package rs.raf.model;
+package rs.raf.enums;
+
 /**
  * File list sorting types.
  */

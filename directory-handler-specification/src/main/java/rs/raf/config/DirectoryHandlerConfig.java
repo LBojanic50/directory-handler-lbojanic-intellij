@@ -6,6 +6,7 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+
 /**
  * Config object of DirectoryHandler.
  */
@@ -28,7 +29,7 @@ public class DirectoryHandlerConfig {
     /**
      * DirectoryHandlerConfig constructor.
      */
-    public DirectoryHandlerConfig(){
+    public DirectoryHandlerConfig() {
         this.maxRepositorySize = 1073741824;
         this.excludedExtensions = new ArrayList<>();
         this.directoriesWithMaxFileCount = new ArrayList<>();

@@ -1,8 +1,9 @@
-package rs.raf.config;
+package rs.raf.enums;
+
 /**
  * Enum of config types
  */
-public enum ConfigUpdateTypes {
+public enum ConfigUpdateType {
     /**
      * Replace config update type
      */

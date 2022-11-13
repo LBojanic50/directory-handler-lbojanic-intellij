@@ -5,12 +5,13 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.lang3.StringUtils;
-import rs.raf.config.ConfigUpdateTypes;
-import rs.raf.exception.DirectoryHandlerExceptions;
+import rs.raf.enums.ConfigUpdateType;
 import rs.raf.config.DirectoryHandlerConfig;
 import rs.raf.config.DirectoryWithMaxFileCount;
+import rs.raf.enums.OrderType;
 import rs.raf.model.LocalFile;
-import rs.raf.model.SortingType;
+import rs.raf.enums.SearchType;
+import rs.raf.enums.SortingType;
 import rs.raf.specification.DirectoryHandlerManager;
 import rs.raf.specification.IDirectoryHandlerSpecification;
 import rs.raf.util.LocalComparators;
@@ -42,7 +43,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         super();
     }
     @Override
-    public void copyFiles(String filePathsString, String copyDestinationDirectoryString, final boolean overwrite) throws BadPathException, MaxFileCountExceededException, IOException, NoFileAtPathException, NonExistentRepositoryException, InvalidParameterException {
+    public void copyFiles(String filePathsString, String copyDestinationDirectoryString, final boolean overwrite) throws BadPathException, MaxFileCountExceededException, IOException, NoFileAtPathException, NonExistentRepositoryException, InvalidParametersException {
         filePathsString = replaceSlashesInPath(filePathsString);
         copyDestinationDirectoryString = replaceSlashesInPath(copyDestinationDirectoryString);
         Path copyDestinationDirectoryPath;
@@ -128,7 +129,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         }
     }
     @Override
-    public void createConfig(final String repositoryName, final String configString) throws IOException, InvalidConfigParametersException, NonExistentRepositoryException, InvalidParameterException, NoFileAtPathException, BadPathException {
+    public void createConfig(final String repositoryName, final String configString) throws IOException, NonExistentRepositoryException, InvalidParametersException, NoFileAtPathException, BadPathException, ValueInConfigCannotBeLessThanOneException {
         if (nonExistentRepositoryCheck(repositoryName)) {
             throw new NonExistentRepositoryException(repositoryName);
         }
@@ -142,7 +143,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         }
     }
     @Override
-    public void createDirectories(String directoryPathsString) throws BadPathException, NoFileAtPathException, IOException, MaxFileCountExceededException, NonExistentRepositoryException, InvalidParameterException {
+    public void createDirectories(String directoryPathsString) throws BadPathException, NoFileAtPathException, IOException, MaxFileCountExceededException, NonExistentRepositoryException, InvalidParametersException {
         directoryPathsString = replaceSlashesInPath(directoryPathsString);
         List<String> directoryPathsList = List.of(directoryPathsString.split("-more-"));
         for (String directoryPathString : directoryPathsList) {
@@ -165,7 +166,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         }
     }
     @Override
-    public void createFiles(String filePathsString) throws IOException, BadPathException, MaxFileCountExceededException, NoFileAtPathException, FileExtensionException, NonExistentRepositoryException, InvalidParameterException, MaxRepositorySizeExceededException {
+    public void createFiles(String filePathsString) throws IOException, BadPathException, MaxFileCountExceededException, NoFileAtPathException, FileExtensionException, NonExistentRepositoryException, InvalidParametersException, MaxRepositorySizeExceededException {
         filePathsString = replaceSlashesInPath(filePathsString);
         List<String> filePathsList = List.of(filePathsString.split("-more-"));
         for (String filePathString : filePathsList) {
@@ -192,7 +193,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         }
     }
     @Override
-    public void createRepository(final String repositoryName, final String configString) throws BadPathException, NonExistentRepositoryException, IOException, InvalidConfigParametersException, InvalidParameterException, NoFileAtPathException {
+    public void createRepository(final String repositoryName, final String configString) throws BadPathException, NonExistentRepositoryException, IOException, InvalidParametersException, NoFileAtPathException, ValueInConfigCannotBeLessThanOneException {
         if (badPathCheck(repositoryName)) {
             throw new BadPathException(repositoryName);
         }
@@ -311,7 +312,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         }
     }
     @Override
-    public DirectoryHandlerConfig getConfig(final String repositoryName) throws IOException, NonExistentRepositoryException, InvalidParameterException, NoFileAtPathException, BadPathException {
+    public DirectoryHandlerConfig getConfig(final String repositoryName) throws IOException, NonExistentRepositoryException, InvalidParametersException, NoFileAtPathException, BadPathException {
         if (nonExistentRepositoryCheck(repositoryName)) {
             throw new NonExistentRepositoryException(repositoryName);
         }
@@ -352,9 +353,9 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         return fileCount;
     }
     @Override
-    public List<LocalFile> getFileListInDirectory(final String directoryPathString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws BadPathException, NoFileAtPathException, IOException, InvalidParameterException {
+    public List<LocalFile> getFileListInDirectory(final String directoryPathString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType, final OrderType orderType) throws BadPathException, NoFileAtPathException, IOException, InvalidParametersException {
         if (!includeFiles && !includeDirectories) {
-            throw new InvalidParameterException("Include files: false; Include directories: false");
+            throw new InvalidParametersException("Include files: false; Include directories: false");
         }
         File directory;
         if (directoryPathString == null) {
@@ -394,7 +395,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
             LocalFile localFile = new LocalFile(file);
             localFileList.add(localFile);
         }
-        return localFileList;
+        return sortList(localFileList, sortingType, orderType);
     }
     @Override
     public long getFileSize(String filePathString) throws BadPathException, NoFileAtPathException {
@@ -408,14 +409,14 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         return FileUtils.sizeOf(workingDirectory.resolve(Paths.get(filePathString)).toFile());
     }
     @Override
-    public List<LocalFile> getFilesForDateRange(final String directoryPathString, final String startDate, final String endDate, final boolean dateCreated, final boolean dateModified, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws InvalidParameterException, NoFileAtPathException, IOException, BadPathException, ParseException {
+    public List<LocalFile> getFilesForDateRange(final String directoryPathString, final String startDate, final String endDate, final boolean dateCreated, final boolean dateModified, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType, final OrderType orderType) throws InvalidParametersException, NoFileAtPathException, IOException, BadPathException, ParseException {
         Date rangeStartDate = new SimpleDateFormat("dd/MM/yyyy").parse(startDate);
         Date rangeEndDate = new SimpleDateFormat("dd/MM/yyyy").parse(endDate);
         if (rangeStartDate.compareTo(rangeEndDate) > 0) {
-            throw new InvalidParameterException("startDate, endDate! End date must be larger than start date");
+            throw new InvalidParametersException("startDate, endDate! End date must be larger than start date");
         }
         List<LocalFile> fileList = new ArrayList<>();
-        List<LocalFile> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE);
+        List<LocalFile> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE, OrderType.ASCENDING);
         DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
         for (LocalFile file : directoryToSearchList) {
             if (dateCreated && !dateModified) {
@@ -438,16 +439,16 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
                 }
             }
             if (!dateCreated && !dateModified) {
-                throw new InvalidParameterException("dateCreated, dateAdded! You must specify which date type to include in search");
+                throw new InvalidParametersException("dateCreated, dateAdded! You must specify which date type to include in search");
             }
         }
-        return sortList(fileList, sortingType);
+        return sortList(fileList, sortingType, orderType);
     }
     @Override
-    public List<LocalFile> getFilesForExcludedExtensions(final String directoryPathString, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws InvalidParameterException, NoFileAtPathException, IOException, BadPathException {
+    public List<LocalFile> getFilesForExcludedExtensions(final String directoryPathString, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType, final OrderType orderType) throws InvalidParametersException, NoFileAtPathException, IOException, BadPathException {
         List<String> searchExcludedExtensionsList = List.of(searchExcludedExtensionsString.split(","));
         List<LocalFile> fileList = new ArrayList<>();
-        List<LocalFile> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE);
+        List<LocalFile> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE, OrderType.ASCENDING);
         for (LocalFile file : directoryToSearchList) {
             for (String excludedExtension : searchExcludedExtensionsList) {
                 if (!file.getFile().getName().toLowerCase().endsWith(excludedExtension.toLowerCase())) {
@@ -455,13 +456,13 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
                 }
             }
         }
-        return sortList(fileList, sortingType);
+        return sortList(fileList, sortingType, orderType);
     }
     @Override
-    public List<LocalFile> getFilesForExtensions(final String directoryPathString, final String searchExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws InvalidParameterException, NoFileAtPathException, IOException, BadPathException {
+    public List<LocalFile> getFilesForExtensions(final String directoryPathString, final String searchExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType, final OrderType orderType) throws InvalidParametersException, NoFileAtPathException, IOException, BadPathException {
         List<String> searchExtensionsList = List.of(searchExtensionsString.split(","));
         List<LocalFile> fileList = new ArrayList<>();
-        List<LocalFile> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE);
+        List<LocalFile> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE, OrderType.ASCENDING);
         for (LocalFile file : directoryToSearchList) {
             for (String extension : searchExtensionsList) {
                 if (file.getFile().getName().toLowerCase().endsWith(extension.toLowerCase())) {
@@ -469,14 +470,14 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
                 }
             }
         }
-        return sortList(fileList, sortingType);
+        return sortList(fileList, sortingType, orderType);
     }
     @Override
-    public List<LocalFile> getFilesForExtensionsAndExcludedExtensions(final String directoryPathString, final String searchExtensionsString, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws InvalidParameterException, NoFileAtPathException, IOException, BadPathException {
+    public List<LocalFile> getFilesForExtensionsAndExcludedExtensions(final String directoryPathString, final String searchExtensionsString, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType, final OrderType orderType) throws InvalidParametersException, NoFileAtPathException, IOException, BadPathException {
         List<String> searchExtensionsList = List.of(searchExtensionsString.split(","));
         List<String> searchExcludedExtensionsList = List.of(searchExcludedExtensionsString.split(","));
         List<LocalFile> fileList = new ArrayList<>();
-        List<LocalFile> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE);
+        List<LocalFile> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE, OrderType.ASCENDING);
         for (LocalFile file : directoryToSearchList) {
             for (String excludedExtension : searchExcludedExtensionsList) {
                 if (!file.getFile().getName().toLowerCase().endsWith(excludedExtension.toLowerCase())) {
@@ -488,24 +489,39 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
                 }
             }
         }
-        return sortList(fileList, sortingType);
+        return sortList(fileList, sortingType, orderType);
     }
     @Override
-    public List<LocalFile> getFilesForSearchName(final String directoryPathString, final String search, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws InvalidParameterException, NoFileAtPathException, IOException, BadPathException {
+    public List<LocalFile> getFilesForSearchName(final String directoryPathString, final String search, final SearchType searchType, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType, final OrderType orderType) throws InvalidParametersException, NoFileAtPathException, IOException, BadPathException {
         List<LocalFile> fileList = new ArrayList<>();
-        List<LocalFile> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE);
+        List<LocalFile> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE, OrderType.ASCENDING);
         for (LocalFile file : directoryToSearchList) {
-            if (file.getFile().getName().toLowerCase().contains(search.toLowerCase())) {
-                fileList.add(file);
+            if (searchType.equals(SearchType.CONTAINS)) {
+                if (file.getFile().getName().toLowerCase().contains(search.toLowerCase())) {
+                    fileList.add(file);
+                }
+            }
+            else if (searchType.equals(SearchType.STARTS_WITH)) {
+                if (file.getFile().getName().toLowerCase().startsWith(search.toLowerCase())) {
+                    fileList.add(file);
+                }
+            }
+            else if (searchType.equals(SearchType.ENDS_WITH)) {
+                if (file.getFile().getName().toLowerCase().endsWith(search.toLowerCase())) {
+                    fileList.add(file);
+                }
+            }
+            else {
+                throw new InvalidParametersException(searchType.name());
             }
         }
-        return sortList(fileList, sortingType);
+        return sortList(fileList, sortingType, orderType);
     }
     @Override
-    public List<LocalFile> getFilesForSearchNameAndExcludedExtensions(final String directoryPathString, final String search, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws InvalidParameterException, NoFileAtPathException, IOException, BadPathException {
+    public List<LocalFile> getFilesForSearchNameAndExcludedExtensions(final String directoryPathString, final String search, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType, final OrderType orderType) throws InvalidParametersException, NoFileAtPathException, IOException, BadPathException {
         List<String> searchExcludedExtensionsList = List.of(searchExcludedExtensionsString.split(","));
         List<LocalFile> fileList = new ArrayList<>();
-        List<LocalFile> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE);
+        List<LocalFile> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE, OrderType.ASCENDING);
         for (LocalFile file : directoryToSearchList) {
             for (String excludedExtension : searchExcludedExtensionsList) {
                 if (!file.getFile().getName().toLowerCase().endsWith(excludedExtension.toLowerCase())) {
@@ -515,13 +531,13 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
                 }
             }
         }
-        return sortList(fileList, sortingType);
+        return sortList(fileList, sortingType, orderType);
     }
     @Override
-    public List<LocalFile> getFilesForSearchNameAndExtensions(final String directoryPathString, final String search, final String searchExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws InvalidParameterException, NoFileAtPathException, IOException, BadPathException {
+    public List<LocalFile> getFilesForSearchNameAndExtensions(final String directoryPathString, final String search, final String searchExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType, final OrderType orderType) throws InvalidParametersException, NoFileAtPathException, IOException, BadPathException {
         List<String> searchExtensionsList = List.of(searchExtensionsString.split(","));
         List<LocalFile> fileList = new ArrayList<>();
-        List<LocalFile> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE);
+        List<LocalFile> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE, OrderType.ASCENDING);
         for (LocalFile file : directoryToSearchList) {
             for (String extension : searchExtensionsList) {
                 if (file.getFile().getName().toLowerCase().endsWith(extension.toLowerCase())) {
@@ -531,14 +547,14 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
                 }
             }
         }
-        return sortList(fileList, sortingType);
+        return sortList(fileList, sortingType, orderType);
     }
     @Override
-    public List<LocalFile> getFilesForSearchNameAndExtensionsAndExcludedExtensions(final String directoryPathString, final String search, final String searchExtensionsString, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws InvalidParameterException, NoFileAtPathException, IOException, BadPathException {
+    public List<LocalFile> getFilesForSearchNameAndExtensionsAndExcludedExtensions(final String directoryPathString, final String search, final String searchExtensionsString, final String searchExcludedExtensionsString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType, final OrderType orderType) throws InvalidParametersException, NoFileAtPathException, IOException, BadPathException {
         List<String> searchExtensionsList = List.of(searchExtensionsString.split(","));
         List<String> searchExcludedExtensionsList = List.of(searchExcludedExtensionsString.split(","));
         List<LocalFile> fileList = new ArrayList<>();
-        List<LocalFile> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE);
+        List<LocalFile> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE, OrderType.ASCENDING);
         for (LocalFile file : directoryToSearchList) {
             for (String excludedExtension : searchExcludedExtensionsList) {
                 if (!file.getFile().getName().toLowerCase().endsWith(excludedExtension.toLowerCase())) {
@@ -552,12 +568,12 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
                 }
             }
         }
-        return sortList(fileList, sortingType);
+        return sortList(fileList, sortingType, orderType);
     }
     @Override
-    public List<LocalFile> getFilesWithNames(final String directoryPathString, final String searchListString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType) throws InvalidParameterException, NoFileAtPathException, IOException, BadPathException {
+    public List<LocalFile> getFilesWithNames(final String directoryPathString, final String searchListString, final boolean recursive, final boolean includeFiles, final boolean includeDirectories, final SortingType sortingType, final OrderType orderType) throws InvalidParametersException, NoFileAtPathException, IOException, BadPathException {
         List<String> searchList = List.of(searchListString.split(","));
-        List<LocalFile> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE);
+        List<LocalFile> directoryToSearchList = getFileListInDirectory(directoryPathString, recursive, includeFiles, includeDirectories, SortingType.NONE, OrderType.ASCENDING);
         List<LocalFile> foundFiles = new ArrayList<>();
         for (LocalFile file : directoryToSearchList) {
             for (String search : searchList) {
@@ -566,10 +582,10 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
                 }
             }
         }
-        return sortList(foundFiles, sortingType);
+        return sortList(foundFiles, sortingType, orderType);
     }
     @Override
-    public void moveFiles(String filePathsString, String moveDestinationDirectoryString, boolean overwrite) throws IOException, BadPathException, NoFileAtPathException, NonExistentRepositoryException, MaxFileCountExceededException, InvalidParameterException {
+    public void moveFiles(String filePathsString, String moveDestinationDirectoryString, boolean overwrite) throws IOException, BadPathException, NoFileAtPathException, NonExistentRepositoryException, MaxFileCountExceededException, InvalidParametersException {
         filePathsString = replaceSlashesInPath(filePathsString);
         moveDestinationDirectoryString = replaceSlashesInPath(moveDestinationDirectoryString);
         Path moveDestinationDirectoryPath;
@@ -659,13 +675,13 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         System.out.println(directoryHandlerConfig);
     }
     @Override
-    public void printFileList(final List<LocalFile> fileList) throws IOException {
+    public void printFileList(final List<LocalFile> fileList) {
         for (LocalFile file : fileList) {
             System.out.println(file);
         }
     }
     @Override
-    public void renameFile(String filePathString, final String newFileName) throws BadPathException, NoFileAtPathException, NonExistentRepositoryException, IOException, FileExtensionException, InvalidParameterException {
+    public void renameFile(String filePathString, final String newFileName) throws BadPathException, NoFileAtPathException, NonExistentRepositoryException, IOException, FileExtensionException, InvalidParametersException {
         filePathString = replaceSlashesInPath(filePathString);
         if (badPathCheck(filePathString)) {
             throw new BadPathException(filePathString);
@@ -688,7 +704,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         }
         Files.move(fileSourcePath, fileDestinationPath);
     }
-    protected void saveConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws NonExistentRepositoryException, IOException, InvalidParameterException, NoFileAtPathException, BadPathException {
+    protected void saveConfig(final String repositoryName, final DirectoryHandlerConfig directoryHandlerConfig) throws NonExistentRepositoryException, IOException, InvalidParametersException, NoFileAtPathException, BadPathException {
         if (nonExistentRepositoryCheck(repositoryName)) {
             throw new NonExistentRepositoryException(repositoryName);
         }
@@ -697,19 +713,19 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         objectMapper.writeValue(configPath.toFile(), directoryHandlerConfig);
     }
     @Override
-    public void updateConfig(final String repositoryName, final String configString, final ConfigUpdateTypes configUpdateType) throws NonExistentRepositoryException, IOException, InvalidConfigParametersException, ValueInConfigCannotBeLessThanOneException, NoFileAtPathException, BadPathException, InvalidParameterException {
+    public void updateConfig(final String repositoryName, final String configString, final ConfigUpdateType configUpdateType) throws NonExistentRepositoryException, IOException, ValueInConfigCannotBeLessThanOneException, NoFileAtPathException, BadPathException, InvalidParametersException {
         DirectoryHandlerConfig currentConfig = getConfig(repositoryName);
         DirectoryHandlerConfig pendingConfig = generateConfigFromString(configString);
         DirectoryHandlerConfig updatedConfig = currentConfig;
         String configPathString = String.format("%s/config.json", repositoryName);
         Path configPath = workingDirectory.resolve(Paths.get(configPathString));
         ObjectMapper objectMapper = new ObjectMapper();
-        if (configUpdateType.equals(ConfigUpdateTypes.REPLACE)) {
-            if (pendingConfig.getMaxRepositorySize() > 0) {
+        if (configUpdateType.equals(ConfigUpdateType.REPLACE)) {
+            if (pendingConfig.getMaxRepositorySize() >= 1) {
                 updatedConfig.setMaxRepositorySize(pendingConfig.getMaxRepositorySize());
             }
             else {
-                throw new ValueInConfigCannotBeLessThanOneException(String.valueOf(pendingConfig.getMaxRepositorySize()));
+                throw new ValueInConfigCannotBeLessThanOneException("maxRepositorySize=" + pendingConfig.getMaxRepositorySize());
             }
             if (pendingConfig.getExcludedExtensions().size() > 0) {
                 updatedConfig.setExcludedExtensions(pendingConfig.getExcludedExtensions());
@@ -717,18 +733,18 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
             if (pendingConfig.getDirectoriesWithMaxFileCount().size() > 0) {
                 for (DirectoryWithMaxFileCount pendingDirectoryWithMaxFileCount : pendingConfig.getDirectoriesWithMaxFileCount()) {
                     if (pendingDirectoryWithMaxFileCount.getMaxFileCount() < 1) {
-                        throw new ValueInConfigCannotBeLessThanOneException(String.valueOf(pendingDirectoryWithMaxFileCount.getMaxFileCount()));
+                        throw new ValueInConfigCannotBeLessThanOneException("maxFileCount=" + pendingDirectoryWithMaxFileCount.getMaxFileCount());
                     }
                 }
                 updatedConfig.setDirectoriesWithMaxFileCount(pendingConfig.getDirectoriesWithMaxFileCount());
             }
         }
-        else if (configUpdateType.equals(ConfigUpdateTypes.ADD)) {
-            if (pendingConfig.getMaxRepositorySize() > 0) {
+        else if (configUpdateType.equals(ConfigUpdateType.ADD)) {
+            if (pendingConfig.getMaxRepositorySize() >= 1) {
                 updatedConfig.setMaxRepositorySize(updatedConfig.getMaxRepositorySize() + pendingConfig.getMaxRepositorySize());
             }
             else {
-                throw new InvalidConfigParametersException(configString);
+                throw new ValueInConfigCannotBeLessThanOneException("maxRepositorySize=" + pendingConfig.getMaxRepositorySize());
             }
             if (pendingConfig.getExcludedExtensions().size() > 0) {
                 for (String pendingExcludedExtension : pendingConfig.getExcludedExtensions()) {
@@ -752,6 +768,9 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
                 for (DirectoryWithMaxFileCount pendingDirectoryWithMaxFileCount : pendingConfig.getDirectoriesWithMaxFileCount()) {
                     for (DirectoryWithMaxFileCount directoryWithMaxFileCount : updatedConfig.getDirectoriesWithMaxFileCount()) {
                         if (pendingDirectoryWithMaxFileCount.getDirectoryName().equals(directoryWithMaxFileCount.getDirectoryName())) {
+                            if (pendingDirectoryWithMaxFileCount.getMaxFileCount() < 1) {
+                                throw new ValueInConfigCannotBeLessThanOneException("maxFileCount=" + String.valueOf(pendingDirectoryWithMaxFileCount.getMaxFileCount()));
+                            }
                             directoryWithMaxFileCountToAdd = new DirectoryWithMaxFileCount(directoryWithMaxFileCount.getDirectoryName(),
                                     directoryWithMaxFileCount.getMaxFileCount() + pendingDirectoryWithMaxFileCount.getMaxFileCount());
                         }
@@ -765,14 +784,14 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
             }
         }
         else {
-            throw new InvalidConfigParametersException(configUpdateType.toString());
+            throw new InvalidParametersException(configUpdateType.toString());
         }
         String configJson = objectMapper.writeValueAsString(updatedConfig);
         deleteFiles(configPathString);
         FileUtils.writeStringToFile(configPath.toFile(), configJson, "UTF-8");
     }
     @Override
-    public void writeToFile(String filePathString, final String textToWrite) throws NonExistentRepositoryException, IOException, MaxRepositorySizeExceededException, InvalidParameterException, NoFileAtPathException, BadPathException {
+    public void writeToFile(String filePathString, final String textToWrite) throws NonExistentRepositoryException, IOException, MaxRepositorySizeExceededException, InvalidParametersException, NoFileAtPathException, BadPathException {
         filePathString = replaceSlashesInPath(filePathString);
         String repositoryName = filePathString.split("/")[0];
         DirectoryHandlerConfig config = getConfig(repositoryName);
@@ -809,7 +828,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
     protected String replaceSlashesInPath(final String filePathString) {
         return StringUtils.replaceChars(filePathString, "\\", "/");
     }
-    protected DirectoryHandlerConfig generateConfigFromString(final String configString) throws InvalidConfigParametersException {
+    protected DirectoryHandlerConfig generateConfigFromString(final String configString) throws InvalidParametersException, BadPathException, ValueInConfigCannotBeLessThanOneException {
         long maxRepositorySize = 1073741824;
         List<String> excludedExtensions = new ArrayList<>();
         List<DirectoryWithMaxFileCount> directoriesWithMaxFileCount = new ArrayList<>();
@@ -827,7 +846,10 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
                             maxRepositorySize = Long.parseLong(configValue);
                         }
                         catch (NumberFormatException e) {
-                            throw new InvalidConfigParametersException(configString);
+                            throw new InvalidParametersException(configValue);
+                        }
+                        if (maxRepositorySize < 1) {
+                            throw new ValueInConfigCannotBeLessThanOneException("maxRepositorySize=" + maxRepositorySize);
                         }
                     }
                     else if (configKey.equals("excludedExtensions")) {
@@ -837,7 +859,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
                                 excludedExtensions.add(excludedExtension);
                             }
                             else {
-                                throw new InvalidConfigParametersException(configString);
+                                throw new InvalidParametersException(excludedExtension);
                             }
                         }
                     }
@@ -854,30 +876,33 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
                                         maxFileCount = Integer.parseInt(directoryWithMaxFileCountPair[1]);
                                     }
                                     catch (NumberFormatException e) {
-                                        throw new InvalidConfigParametersException(configString);
+                                        throw new InvalidParametersException(directoryWithMaxFileCountPair[1]);
+                                    }
+                                    if (maxFileCount < 1) {
+                                        throw new ValueInConfigCannotBeLessThanOneException("maxFileCount=" + maxFileCount);
                                     }
                                     directoryWithMaxFileCount = new DirectoryWithMaxFileCount(directoryName, maxFileCount);
                                 }
                                 else {
-                                    throw new InvalidConfigParametersException(configString);
+                                    throw new BadPathException(directoryName);
                                 }
                             }
                             else {
-                                throw new InvalidConfigParametersException(configString);
+                                throw new InvalidParametersException(directoriesWithMaxFileCountParameter);
                             }
                             directoriesWithMaxFileCount.add(directoryWithMaxFileCount);
                         }
                     }
                     else {
-                        throw new InvalidConfigParametersException(configString);
+                        throw new InvalidParametersException(configKey);
                     }
                 }
                 else {
-                    throw new InvalidConfigParametersException(configString);
+                    throw new InvalidParametersException(Arrays.toString(configKeyAndValue));
                 }
             }
             else {
-                throw new InvalidConfigParametersException(configString);
+                throw new InvalidParametersException(configParameter);
             }
         }
         return new DirectoryHandlerConfig(maxRepositorySize, excludedExtensions, directoriesWithMaxFileCount);
@@ -903,8 +928,8 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         filePathString = replaceSlashesInPath(filePathString);
         return !Files.exists(workingDirectory.resolve(Paths.get(filePathString)));
     }
-    protected boolean nonExistentRepositoryCheck(final String repositoryName) throws InvalidParameterException, NoFileAtPathException, IOException, BadPathException {
-        List<LocalFile> repositories = getFileListInDirectory(null, false, false, true, SortingType.NAME);
+    protected boolean nonExistentRepositoryCheck(final String repositoryName) throws InvalidParametersException, NoFileAtPathException, IOException, BadPathException {
+        List<LocalFile> repositories = getFileListInDirectory(null, false, false, true, SortingType.NAME, OrderType.ASCENDING);
         boolean found = false;
         for (LocalFile repository : repositories) {
             if (repository.getFile().getName().equals(repositoryName)) {
@@ -913,7 +938,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         }
         return !found;
     }
-    protected List<LocalFile> sortList(List<LocalFile> listToSort, final SortingType sortingType) throws InvalidParameterException {
+    protected List<LocalFile> sortList(List<LocalFile> listToSort, final SortingType sortingType, final OrderType orderType) throws InvalidParametersException {
         if (listToSort == null) {
             throw new NullPointerException();
         }
@@ -933,8 +958,17 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
             listToSort.sort(new LocalComparators.ModificationDateComparator());
         }
         else {
-            throw new InvalidParameterException(sortingType.toString());
+            throw new InvalidParametersException(sortingType.toString());
         }
-        return listToSort;
+        if (orderType.equals(OrderType.ASCENDING)) {
+            return listToSort;
+        }
+        else if (orderType.equals(OrderType.DESCENDING)) {
+            Collections.reverse(listToSort);
+            return listToSort;
+        }
+        else {
+            throw new InvalidParametersException(orderType.toString());
+        }
     }
 }

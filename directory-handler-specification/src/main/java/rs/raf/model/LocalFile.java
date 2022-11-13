@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
+
 /**
  * Local file with java.io.File and file metadata.
  */
@@ -24,6 +25,7 @@ public class LocalFile {
     private BasicFileAttributes fileMetadata;
     /**
      * Local file constructor with java.io.File parameter.
+     *
      * @param file java.io.File.
      * @throws IOException for IO reasons.
      */
@@ -36,6 +38,6 @@ public class LocalFile {
      */
     @Override
     public String toString() {
-       return "File path: " + file.getAbsolutePath() + "  Size: " + fileMetadata.size() + " Creation time: " + fileMetadata.creationTime() + " Last modified time: " + fileMetadata.lastModifiedTime() + "\n";
+        return "File path: " + file.getAbsolutePath() + "  Size: " + fileMetadata.size() + " Creation time: " + fileMetadata.creationTime() + " Last modified time: " + fileMetadata.lastModifiedTime() + "\n";
     }
 }

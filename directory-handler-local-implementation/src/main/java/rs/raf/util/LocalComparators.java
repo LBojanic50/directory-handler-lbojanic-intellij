@@ -1,7 +1,5 @@
 package rs.raf.util;
 
-import rs.raf.exception.DirectoryHandlerExceptions;
-import rs.raf.localImplementation.DirectoryHandlerLocalImplementation;
 import rs.raf.model.LocalFile;
 
 import java.io.IOException;
@@ -10,6 +8,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
+
 import rs.raf.exception.DirectoryHandlerExceptions.*;
 import rs.raf.specification.DirectoryHandlerManager;
 
@@ -60,7 +59,7 @@ public class LocalComparators {
             try {
                 file1Size = DirectoryHandlerManager.getDirectoryHandler().getFileSize(file1.getFile().getAbsolutePath());
             }
-            catch (IOException | BadPathException | NoFileAtPathException | InvalidParameterException |
+            catch (IOException | BadPathException | NoFileAtPathException | InvalidParametersException |
                    NonExistentRepositoryException | MaxFileCountExceededException e) {
                 throw new RuntimeException(e);
             }
@@ -68,7 +67,7 @@ public class LocalComparators {
                 file2Size = DirectoryHandlerManager.getDirectoryHandler().getFileSize(file2.getFile().getAbsolutePath());
             }
             catch (IOException | BadPathException | NoFileAtPathException | MaxFileCountExceededException |
-                   InvalidParameterException | NonExistentRepositoryException e) {
+                   InvalidParametersException | NonExistentRepositoryException e) {
                 throw new RuntimeException(e);
             }
             return file1Size.compareTo(file2Size);
