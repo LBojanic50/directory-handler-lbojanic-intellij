@@ -36,9 +36,6 @@ public class LocalFile {
      */
     @Override
     public String toString() {
-        return "LocalFile{" +
-                "file=" + file +
-                ", fileMetadata=" + fileMetadata +
-                '}';
+       return "File path: " + file.getAbsolutePath() + "  Size: " + fileMetadata.size() + " Creation time: " + fileMetadata.creationTime() + " Last modified time: " + fileMetadata.lastModifiedTime() + "\n";
     }
 }

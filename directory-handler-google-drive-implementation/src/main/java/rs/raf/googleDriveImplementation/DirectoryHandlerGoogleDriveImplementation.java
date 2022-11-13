@@ -402,13 +402,13 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             FileList result = null;
             if (recursive) {
                 if (includeFiles && !includeDirectories) {
-                    result = googleDriveClient.files().list().setQ("mimeType != 'application/vnd.google-apps.folder' and trashed = false").setFields("nextPageToken, files(id, name, parents, mimeType)").setSpaces("drive").execute();
+                    result = googleDriveClient.files().list().setQ("mimeType != 'application/vnd.google-apps.folder' and trashed = false").setFields("nextPageToken, files(id, name, parents, mimeType, size, createdTime, modifiedTime)").setSpaces("drive").execute();
                 }
                 if (!includeFiles && includeDirectories) {
-                    result = googleDriveClient.files().list().setQ("mimeType = 'application/vnd.google-apps.folder' and trashed = false").setFields("nextPageToken, files(id, name, parents, mimeType)").setSpaces("drive").execute();
+                    result = googleDriveClient.files().list().setQ("mimeType = 'application/vnd.google-apps.folder' and trashed = false").setFields("nextPageToken, files(id, name, parents, mimeType, size, createdTime, modifiedTime)").setSpaces("drive").execute();
                 }
                 if (includeFiles && includeDirectories) {
-                    result = googleDriveClient.files().list().setQ("trashed = false").setFields("nextPageToken, files(id, name, parents, mimeType)").setSpaces("drive").execute();
+                    result = googleDriveClient.files().list().setQ("trashed = false").setFields("nextPageToken, files(id, name, parents, mimeType, size, createdTime, modifiedTime)").setSpaces("drive").execute();
                 }
                 List<File> files = result.getFiles();
                 if (files == null || files.isEmpty()) {
@@ -420,13 +420,13 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             }
             else {
                 if (includeFiles && !includeDirectories) {
-                    result = googleDriveClient.files().list().setQ("'root' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false").setFields("files(id, name, parents, mimeType)").setSpaces("drive").execute();
+                    result = googleDriveClient.files().list().setQ("'root' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false").setFields("files(id, name, parents, mimeType, size, createdTime, modifiedTime)").setSpaces("drive").execute();
                 }
                 if (!includeFiles && includeDirectories) {
-                    result = googleDriveClient.files().list().setQ("'root' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false").setFields("files(id, name, parents, mimeType)").setSpaces("drive").execute();
+                    result = googleDriveClient.files().list().setQ("'root' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false").setFields("files(id, name, parents, mimeType, size, createdTime, modifiedTime)").setSpaces("drive").execute();
                 }
                 if (includeFiles && includeDirectories) {
-                    result = googleDriveClient.files().list().setQ("'root' in parents and trashed = false").setFields("files(id, name, parents, mimeType)").setSpaces("drive").execute();
+                    result = googleDriveClient.files().list().setQ("'root' in parents and trashed = false").setFields("files(id, name, parents, mimeType, size, createdTime, modifiedTime)").setSpaces("drive").execute();
                 }
                 List<File> files = result.getFiles();
                 if (files == null || files.isEmpty()) {
@@ -455,13 +455,13 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             else {
                 FileList result = null;
                 if (includeFiles && !includeDirectories) {
-                    result = googleDriveClient.files().list().setQ(String.format("'%s' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false", directoryId)).setFields("files(id, name, parents, mimeType)").setSpaces("drive").execute();
+                    result = googleDriveClient.files().list().setQ(String.format("'%s' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false", directoryId)).setFields("files(id, name, parents, mimeType, size, createdTime, modifiedTime)").setSpaces("drive").execute();
                 }
                 if (!includeFiles && includeDirectories) {
-                    result = googleDriveClient.files().list().setQ(String.format("'%s' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false", directoryId)).setFields("files(id, name, parents, mimeType)").setSpaces("drive").execute();
+                    result = googleDriveClient.files().list().setQ(String.format("'%s' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false", directoryId)).setFields("files(id, name, parents, mimeType, size, createdTime, modifiedTime)").setSpaces("drive").execute();
                 }
                 if (includeFiles && includeDirectories) {
-                    result = googleDriveClient.files().list().setQ(String.format("'%s' in parents and trashed = false", directoryId)).setFields("files(id, name, parents, mimeType)").setSpaces("drive").execute();
+                    result = googleDriveClient.files().list().setQ(String.format("'%s' in parents and trashed = false", directoryId)).setFields("files(id, name, parents, mimeType, size, createdTime, modifiedTime)").setSpaces("drive").execute();
                 }
                 List<File> files = result.getFiles();
                 if (files == null || files.isEmpty()) {
@@ -657,7 +657,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
     @Override
     public void printFileList(final List<File> fileList) {
         for (File file : fileList) {
-            System.out.println(file.getName() + " : " + file.getId() + " : " + file.getSize());
+            System.out.println("File name: " + file.getName() + " Id: " + file.getId() + " Size: " + file.getSize() + " Creation time: " + file.getCreatedTime() + " Last modified time: " + file.getModifiedTime());
         }
     }
     @Override
@@ -774,7 +774,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         renameFile(parentPathString + "/" + editedName, fileName);
     }
     @Override
-    public void moveFiles(String filePathsString, String moveDestinationDirectoryString, boolean overwrite) throws NoFileAtPathException, IOException, BadPathException, InvalidParameterException, NonExistentRepositoryException, MaxFileCountExceededException, MaxRepositorySizeExceededException {
+    public void moveFiles(String filePathsString, String moveDestinationDirectoryString, boolean overwrite) throws NoFileAtPathException, IOException, BadPathException, InvalidParameterException, NonExistentRepositoryException, MaxFileCountExceededException {
         filePathsString = replaceSlashesInPath(filePathsString);
         moveDestinationDirectoryString = replaceSlashesInPath(moveDestinationDirectoryString);
         if (badPathCheck(moveDestinationDirectoryString)) {
@@ -791,7 +791,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             if (noFileAtPathCheck(filePathString)) {
                 throw new NoFileAtPathException(filePathString);
             }
-            String repositoryName = filePathString.split("/")[0];
+            String repositoryName = moveDestinationDirectoryString.split("/")[0];
             DirectoryHandlerConfig config = getConfig(repositoryName);
             if (maxFileCountExceededCheck(config, moveDestinationDirectoryString)) {
                 throw new MaxFileCountExceededException(moveDestinationDirectoryString);
@@ -857,7 +857,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             if (noFileAtPathCheck(filePathString)) {
                 throw new NoFileAtPathException(filePathString);
             }
-            String repositoryName = filePathString.split("/")[0];
+            String repositoryName = copyDestinationDirectoryString.split("/")[0];
             DirectoryHandlerConfig config = getConfig(repositoryName);
             if (maxFileCountExceededCheck(config, copyDestinationDirectoryString)) {
                 throw new MaxFileCountExceededException(copyDestinationDirectoryString);

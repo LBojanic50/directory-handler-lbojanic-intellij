@@ -117,14 +117,27 @@ public class Main {
             }
             else if (splitCommand[0].equals("downloadFiles")) {
                 if (splitCommand.length == 4) {
-                    if (splitCommand[3].equals("true")) {
-                        directoryHandler.downloadFiles(splitCommand[1], splitCommand[2], true);
+                    if(splitCommand[2].equals("default")){
+                        if (splitCommand[3].equals("true")) {
+                            directoryHandler.downloadFiles(splitCommand[1], null, true);
+                        }
+                        else if (splitCommand[3].equals("false")) {
+                            directoryHandler.downloadFiles(splitCommand[1], null, false);
+                        }
+                        else {
+                            throw new InvalidCommandException(command);
+                        }
                     }
-                    else if (splitCommand[3].equals("false")) {
-                        directoryHandler.downloadFiles(splitCommand[1], splitCommand[2], false);
-                    }
-                    else {
-                        throw new InvalidCommandException(command);
+                    else{
+                        if (splitCommand[3].equals("true")) {
+                            directoryHandler.downloadFiles(splitCommand[1], splitCommand[2], true);
+                        }
+                        else if (splitCommand[3].equals("false")) {
+                            directoryHandler.downloadFiles(splitCommand[1], splitCommand[2], false);
+                        }
+                        else {
+                            throw new InvalidCommandException(command);
+                        }
                     }
                 }
                 else {
@@ -738,6 +751,9 @@ public class Main {
             }
             else if (command.equals("exit")) {
                 System.exit(0);
+            }
+            else if(command.equals("test")){
+                directoryHandler.printFileList(directoryHandler.getFileListInDirectory(null, true, true, true, SortingType.NAME));
             }
             else {
                 throw new InvalidCommandException(command);

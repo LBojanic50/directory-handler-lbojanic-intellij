@@ -61,7 +61,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
             if (noFileAtPathCheck(filePathString)) {
                 throw new NoFileAtPathException(filePathString);
             }
-            String repositoryName = filePathString.split("/")[0];
+            String repositoryName = copyDestinationDirectoryString.split("/")[0];
             DirectoryHandlerConfig config = getConfig(repositoryName);
             if (maxFileCountExceededCheck(config, copyDestinationDirectoryString)) {
                 throw new MaxFileCountExceededException(copyDestinationDirectoryString);
@@ -588,7 +588,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
             if (noFileAtPathCheck(filePathString)) {
                 throw new NoFileAtPathException(filePathString);
             }
-            String repositoryName = filePathString.split("/")[0];
+            String repositoryName = moveDestinationDirectoryString.split("/")[0];
             DirectoryHandlerConfig config = getConfig(repositoryName);
             if (maxFileCountExceededCheck(config, moveDestinationDirectoryString)) {
                 throw new MaxFileCountExceededException(moveDestinationDirectoryString);
@@ -661,7 +661,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
     @Override
     public void printFileList(final List<LocalFile> fileList) throws IOException {
         for (LocalFile file : fileList) {
-            System.out.println(file.getFile().getName());
+            System.out.println(file);
         }
     }
     @Override
