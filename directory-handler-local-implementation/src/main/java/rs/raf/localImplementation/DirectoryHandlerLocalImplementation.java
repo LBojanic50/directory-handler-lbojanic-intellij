@@ -165,7 +165,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
         }
     }
     @Override
-    public void createFiles(String filePathsString) throws IOException, BadPathException, MaxFileCountExceededException, NoFileAtPathException, FileExtensionException, NonExistentRepositoryException, InvalidParameterException {
+    public void createFiles(String filePathsString) throws IOException, BadPathException, MaxFileCountExceededException, NoFileAtPathException, FileExtensionException, NonExistentRepositoryException, InvalidParameterException, MaxRepositorySizeExceededException {
         filePathsString = replaceSlashesInPath(filePathsString);
         List<String> filePathsList = List.of(filePathsString.split("-more-"));
         for (String filePathString : filePathsList) {
@@ -188,6 +188,7 @@ public class DirectoryHandlerLocalImplementation implements IDirectoryHandlerSpe
                 createDirectories(parentDirectory);
             }
             Files.createFile(workingDirectory.resolve(Paths.get(filePathString)));
+            writeToFile(filePathString, "sampleText");
         }
     }
     @Override

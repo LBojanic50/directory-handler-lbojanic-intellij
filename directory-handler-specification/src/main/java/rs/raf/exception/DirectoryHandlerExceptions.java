@@ -12,7 +12,7 @@ public class DirectoryHandlerExceptions {
          * @param filePathString File path.
          */
         public MaxFileCountExceededException(final String filePathString){
-            super(String.format("Max file count for file/directory %s exceeded!", filePathString));
+            super(String.format("Max file count for directory %s exceeded!", filePathString));
         }
     }
     /**

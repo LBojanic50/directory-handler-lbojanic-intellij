@@ -1,1 +1,17 @@
-{"maxRepositorySize":1073742324,"excludedExtensions":["zip","jar"],"directoriesWithMaxFileCount":[{"directoryName":"testDir1","maxFileCount":95},{"directoryName":"testDir1","maxFileCount":65}]}
+{
+    "maxRepositorySize": 1073742324,
+    "excludedExtensions": [
+        "zip",
+        "jar"
+    ],
+    "directoriesWithMaxFileCount": [
+        {
+            "directoryName": "testDir1",
+            "maxFileCount": 95
+        },
+        {
+            "directoryName": "testDir1",
+            "maxFileCount": 65
+        }
+    ]
+}

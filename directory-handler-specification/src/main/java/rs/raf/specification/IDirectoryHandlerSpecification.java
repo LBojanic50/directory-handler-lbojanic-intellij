@@ -84,12 +84,12 @@ public interface IDirectoryHandlerSpecification<T> {
      *                       directoriesWithMaxFileCount is a comma delimited list of - delimited string which represent a key value pair of a directory name and the max file count that would be allowed to store inside. Example: dir1-25,dir2-50
      *                       Full config string example: maxRepositorySize=2048;excludedExtensions=jar,zip;directoriesWithMaxFileCount=exampleDir1-75,exampleDir2-100
      *                       Not all parameters have to be specified. Can be parsed as null in order to create a default config with maxRepositorySize=1073741824.
-     * @throws IOException                      for IO reasons.
-     * @throws BadPathException                 if path is in bad format.
-     * @throws NoFileAtPathException            if no file exists at path.
-     * @throws InvalidParameterException        if parameters are in bad format.
-     * @throws NonExistentRepositoryException   if path starts with a non-existent repository name.
-     * @throws InvalidConfigParametersException if config is in bad format.
+     * @throws IOException                        for IO reasons.
+     * @throws BadPathException                   if path is in bad format.
+     * @throws NoFileAtPathException              if no file exists at path.
+     * @throws InvalidParameterException          if parameters are in bad format.
+     * @throws NonExistentRepositoryException     if path starts with a non-existent repository name.
+     * @throws InvalidConfigParametersException   if config is in bad format.
      */
     void createRepository(final String repositoryName, final String configString) throws NonExistentRepositoryException, InvalidParameterException, NoFileAtPathException, IOException, BadPathException, InvalidConfigParametersException;
     /**

@@ -37,7 +37,7 @@ import java.util.*;
 import rs.raf.exception.DirectoryHandlerExceptions.*;
 
 public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHandlerSpecification<File> {
-    private static final Path workingDirectory = Paths.get("DirectoryHandlerGoogleDrive");
+    private static final Path workingDirectory = Paths.get(System.getProperty("user.dir")).resolve("DirectoryHandlerGoogleDrive");
     public static List<File> allFilesList;
     private static Drive googleDriveClient;
     private static String APPLICATION_NAME = "directory-handler-lbojanic";
@@ -191,7 +191,7 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         }
     }
     @Override
-    public void createFiles(String filePathsString) throws NoFileAtPathException, IOException, BadPathException, MaxFileCountExceededException, InvalidParameterException, NonExistentRepositoryException, FileExtensionException {
+    public void createFiles(String filePathsString) throws NoFileAtPathException, IOException, BadPathException, MaxFileCountExceededException, InvalidParameterException, NonExistentRepositoryException, FileExtensionException, MaxRepositorySizeExceededException {
         filePathsString = replaceSlashesInPath(filePathsString);
         List<String> filePathsList = List.of(filePathsString.split("-more-"));
         for (String filePathString : filePathsList) {
@@ -214,11 +214,19 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             if (excludedExtensionsCheck(config, filePathString)) {
                 throw new FileExtensionException(filePathString);
             }
+            String sampleText = "sampleText";
+            if(maxRepositorySizeExceededCheck(config, repositoryName, sampleText.getBytes().length)){
+                throw new MaxRepositorySizeExceededException(repositoryName);
+            }
+            Path tempFilePath = workingDirectory.resolve("temp").resolve("tempFile.txt");
+            FileUtils.writeStringToFile(tempFilePath.toFile(), "sampleText", "UTF-8");
+            FileContent mediaContent = new FileContent("media/text", tempFilePath.toFile());
             File fileMetadata = new File();
             fileMetadata.setName(fileName);
             fileMetadata.setParents(Collections.singletonList(getFileIdByPath(parentDirectory)));
             fileMetadata.setMimeType("application/octet-stream");
-            googleDriveClient.files().create(fileMetadata).setFields("id, name, parents, mimeType").execute();
+            googleDriveClient.files().create(fileMetadata, mediaContent).setFields("id, name, parents, mimeType").execute();
+            clearTemp();
         }
     }
     @Override
@@ -280,11 +288,11 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             if (getFile.execute().getMimeType().equals("application/vnd.google-apps.folder")) {
                 throw new UnsupportedOperationException();
             }
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            OutputStream outputStream = new ByteArrayOutputStream();
             getFile.executeMediaAndDownloadTo(outputStream);
             String fileName = filePathString.substring(filePathString.lastIndexOf("/") + 1);
             java.io.File destinationFile = downloadDestinationDirectoryPath.resolve(fileName).toFile();
-            InputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+            InputStream inputStream = new ByteArrayInputStream(((ByteArrayOutputStream) outputStream).toByteArray());
             if (overwrite) {
                 FileUtils.copyInputStreamToFile(inputStream, destinationFile);
             }
@@ -333,7 +341,9 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         if (directoryPathString == null) {
             for (File file : allFilesList) {
                 if (!file.getMimeType().equals("application/vnd.google-apps.folder")) {
-                    directorySize += file.getSize();
+                    if(file.getSize() != null){
+                        directorySize += file.getSize();
+                    }
                 }
             }
         }
@@ -342,7 +352,9 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
             List<File> files = result.getFiles();
             if (files != null && !files.isEmpty()) {
                 for (File file : files) {
-                    directorySize += file.getSize();
+                    if(file.getSize() != null){
+                        directorySize += file.getSize();
+                    }
                 }
             }
         }
@@ -738,26 +750,28 @@ public class DirectoryHandlerGoogleDriveImplementation implements IDirectoryHand
         }
         String repositoryName = filePathString.split("/")[0];
         DirectoryHandlerConfig config = getConfig(repositoryName);
-        downloadFiles(filePathString, "temp", true);
-        String fileName = Paths.get(filePathString).getFileName().toString();
-        String parentPathString = replaceSlashesInPath(Paths.get(filePathString).getParent().toString());
-        String parentId = getFileIdByPath(parentPathString);
-        File fileMetadata = new File();
-        fileMetadata.setName(fileName + " (Edited)");
-        fileMetadata.setParents(Collections.singletonList(parentId));
-        fileMetadata.setMimeType("application/octet-stream");
-        java.io.File tempFile = workingDirectory.resolve(Paths.get("temp")).resolve(fileName).toFile();
         if (excludedExtensionsCheck(config, filePathString)) {
             throw new FileExtensionException(filePathString);
         }
         if (maxRepositorySizeExceededCheck(config, repositoryName, textToWrite.getBytes().length)) {
             throw new MaxRepositorySizeExceededException(repositoryName);
         }
+        downloadFiles(filePathString, "temp", true);
+        String fileName = Paths.get(filePathString).getFileName().toString();
+        String parentPathString = replaceSlashesInPath(Paths.get(filePathString).getParent().toString());
+        String parentId = getFileIdByPath(parentPathString);
+        File fileMetadata = new File();
+        String editedName = fileName + " (Edited)";
+        fileMetadata.setName(editedName);
+        fileMetadata.setParents(Collections.singletonList(parentId));
+        fileMetadata.setMimeType("application/octet-stream");
+        java.io.File tempFile = workingDirectory.resolve(Paths.get("temp")).resolve(fileName).toFile();
         FileUtils.writeStringToFile(tempFile, textToWrite, "UTF-8", true);
         FileContent mediaContent = new FileContent("media/text", tempFile);
         googleDriveClient.files().create(fileMetadata, mediaContent).setFields("id, name, parents, mimeType").execute();
         deleteFiles(filePathString);
         clearTemp();
+        renameFile(parentPathString + "/" + editedName, fileName);
     }
     @Override
     public void moveFiles(String filePathsString, String moveDestinationDirectoryString, boolean overwrite) throws NoFileAtPathException, IOException, BadPathException, InvalidParameterException, NonExistentRepositoryException, MaxFileCountExceededException, MaxRepositorySizeExceededException {
